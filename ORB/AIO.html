@@ -5,56 +5,185 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Oroboro AIO</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
     :root {
       color-scheme: dark;
-      --bg: #060816;
-      --panel: rgba(8, 14, 32, 0.92);
-      --line: rgba(111, 239, 255, 0.25);
-      --accent: #6fefff;
-      --accent2: #ff7ce5;
-      --text: #f4f7ff;
-      --muted: #8e9bb8;
+      --bg: #061523;
+      --panel: rgba(8, 18, 30, 0.9);
+      --line: rgba(72, 215, 198, 0.3);
+      --accent: #48d7c6;
+      --accent2: #ff9f43;
+      --text: #f3faf8;
+      --muted: #8eaeb7;
+      --glow: rgba(72, 215, 198, 0.22);
+      --signal-speed: 2.4s;
     }
 
     * { box-sizing: border-box; }
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: "Segoe UI", Tahoma, sans-serif;
-      background: radial-gradient(circle at top, #17244f 0%, var(--bg) 60%, #03050b 100%);
+      font-family: "Space Grotesk", "Avenir Next", sans-serif;
+      background: radial-gradient(circle at top, #1a4f62 0%, var(--bg) 45%, #05080f 100%);
       color: var(--text);
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      width: 40vmax;
+      height: 40vmax;
+      border-radius: 50%;
+      filter: blur(64px);
+      opacity: 0.35;
+      pointer-events: none;
+      z-index: -1;
+      animation: drift 13s ease-in-out infinite;
+    }
+
+    body::before {
+      background: rgba(72, 215, 198, 0.42);
+      left: -14vmax;
+      top: -14vmax;
+    }
+
+    body::after {
+      background: rgba(255, 159, 67, 0.34);
+      right: -14vmax;
+      bottom: -16vmax;
+      animation-delay: 2.8s;
+    }
+
+    @keyframes drift {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(1.2vmax, -0.8vmax) scale(1.08); }
+      100% { transform: translate(0, 0) scale(1); }
     }
 
     .shell {
-      width: min(980px, 100%);
+      width: min(1080px, 100%);
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 24px;
-      box-shadow: 0 0 35px rgba(0, 0, 0, 0.35), 0 0 22px rgba(111, 239, 255, 0.16);
+      box-shadow: 0 24px 55px rgba(0, 0, 0, 0.4), 0 0 28px var(--glow);
       overflow: hidden;
+      backdrop-filter: blur(8px);
     }
 
     .topbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
       padding: 16px 20px;
       border-bottom: 1px solid var(--line);
       background: rgba(255,255,255,0.03);
     }
 
-    .brand { font-size: 1rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
+    .brand {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .nav-link {
+      padding: 6px 10px;
+      border-radius: 999px;
+      text-decoration: none;
+      color: var(--accent);
+      border: 1px solid rgba(72, 215, 198, 0.35);
+      background: rgba(72, 215, 198, 0.12);
+      font-size: 0.8rem;
+    }
+
     .badge {
       padding: 6px 10px;
       border-radius: 999px;
-      background: rgba(111, 239, 255, 0.14);
+      background: rgba(72, 215, 198, 0.14);
       color: var(--accent);
       font-size: 0.85rem;
-      border: 1px solid rgba(111, 239, 255, 0.25);
+      border: 1px solid rgba(72, 215, 198, 0.25);
+    }
+
+    .mode-chip {
+      padding: 6px 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 159, 67, 0.4);
+      background: rgba(255, 159, 67, 0.15);
+      color: #ffd9ad;
+      font-size: 0.83rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .state-ribbon {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .state-meter {
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 10px;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .state-meter-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+
+    .state-meter-track {
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.1);
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .state-meter-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      transition: width 0.35s ease;
+    }
+
+    #trust-meter { background: linear-gradient(90deg, #36d399, #8ce99a); }
+    #tension-meter { background: linear-gradient(90deg, #ff7a59, #ffb347); }
+
+    body[data-core-mode="flow"] { --glow: rgba(72, 215, 198, 0.25); --signal-speed: 2.3s; }
+    body[data-core-mode="alert"] { --glow: rgba(255, 120, 89, 0.24); --signal-speed: 1.3s; }
+    body[data-core-mode="focus"] { --glow: rgba(255, 168, 90, 0.24); --signal-speed: 1.8s; }
+    body[data-core-mode="reflective"] { --glow: rgba(102, 191, 255, 0.24); --signal-speed: 2.9s; }
+    body[data-core-mode="offline"] { --glow: rgba(142, 174, 183, 0.2); --signal-speed: 3.2s; }
+
+    body[data-core-mode="alert"] .mode-chip {
+      background: rgba(255, 122, 89, 0.2);
+      border-color: rgba(255, 122, 89, 0.45);
+      color: #ffd3c8;
     }
 
     .content {
@@ -75,8 +204,8 @@
     .signal {
       height: 140px;
       border-radius: 18px;
-      border: 1px solid rgba(111, 239, 255, 0.22);
-      background: radial-gradient(circle at center, rgba(111,239,255,0.18), rgba(3,7,18,0.9));
+      border: 1px solid rgba(72, 215, 198, 0.22);
+      background: radial-gradient(circle at center, rgba(72,215,198,0.24), rgba(3,7,18,0.9));
       position: relative;
       overflow: hidden;
       margin-bottom: 14px;
@@ -87,13 +216,13 @@
       position: absolute;
       inset: 18px;
       border-radius: 50%;
-      border: 2px solid rgba(111,239,255,0.35);
-      animation: pulse 2.4s infinite ease-in-out;
+      border: 2px solid rgba(72,215,198,0.35);
+      animation: pulse var(--signal-speed) infinite ease-in-out;
     }
 
     .signal::after {
       inset: 40px;
-      border-color: rgba(255,124,229,0.35);
+      border-color: rgba(255,159,67,0.38);
       animation-delay: 0.8s;
     }
 
@@ -188,6 +317,7 @@
     }
 
     @media (max-width: 760px) {
+      .state-ribbon { grid-template-columns: 1fr; }
       .content { grid-template-columns: 1fr; }
       .left { border-right: 0; border-bottom: 1px solid var(--line); }
     }
@@ -197,7 +327,23 @@
   <div class="shell">
     <div class="topbar">
       <div class="brand">Oroboro • AIO Channel</div>
-      <div class="badge" id="version-banner">v0.1.0</div>
+      <div class="topbar-right">
+        <a class="nav-link" href="Index.html">World</a>
+        <a class="nav-link" href="CreativeStudio.html">Studio</a>
+        <div class="mode-chip" id="mode-chip">Mode: Flow</div>
+        <div class="badge" id="version-banner">v0.1.0</div>
+      </div>
+    </div>
+
+    <div class="state-ribbon">
+      <div class="state-meter">
+        <div class="state-meter-label">Trust Energy</div>
+        <div class="state-meter-track"><div class="state-meter-fill" id="trust-meter"></div></div>
+      </div>
+      <div class="state-meter">
+        <div class="state-meter-label">Tension Energy</div>
+        <div class="state-meter-track"><div class="state-meter-fill" id="tension-meter"></div></div>
+      </div>
     </div>
 
     <div class="content">
@@ -215,6 +361,7 @@
         </div>
         <div class="status-card">
           <h3>Shared Core State</h3>
+          <p><strong>Mode:</strong> <span id="shared-mode">flow</span></p>
           <p><strong>Marker:</strong> <span id="shared-marker">-</span></p>
           <p><strong>Trust:</strong> <span id="shared-trust">-</span></p>
           <p><strong>Tension:</strong> <span id="shared-tension">-</span></p>
@@ -258,6 +405,10 @@
     const sharedPreference = document.getElementById('shared-preference');
     const sharedMemorySize = document.getElementById('shared-memory-size');
     const sharedEvents = document.getElementById('shared-events');
+    const sharedMode = document.getElementById('shared-mode');
+    const modeChip = document.getElementById('mode-chip');
+    const trustMeter = document.getElementById('trust-meter');
+    const tensionMeter = document.getElementById('tension-meter');
 
     versionBanner.textContent = `v${VERSION}`;
     console.log(`Oroboro AIO loaded: v${VERSION}`);
@@ -292,8 +443,38 @@
       return payload.ok ? payload : null;
     }
 
+    function normalizePercent(value) {
+      if (value === undefined || value === null || Number.isNaN(Number(value))) return 0;
+      const n = Number(value);
+      if (n >= 0 && n <= 1) return Math.max(0, Math.min(100, n * 100));
+      return Math.max(0, Math.min(100, n));
+    }
+
+    function deriveCoreMode(marker, trust, tension) {
+      const state = String(marker || '').toLowerCase();
+      if (!marker) return 'offline';
+      if (tension >= 68 || state.includes('block') || state.includes('alert')) return 'alert';
+      if (state.includes('discover') || state.includes('open') || state.includes('acting')) return 'focus';
+      if (trust >= 62 && tension < 40) return 'flow';
+      return 'reflective';
+    }
+
+    function applyAdaptiveInterface(marker, trustRaw, tensionRaw) {
+      const trust = normalizePercent(trustRaw);
+      const tension = normalizePercent(tensionRaw);
+      const mode = deriveCoreMode(marker, trust, tension);
+      document.body.dataset.coreMode = mode;
+      modeChip.textContent = `Mode: ${mode}`;
+      sharedMode.textContent = mode;
+      trustMeter.style.width = `${trust.toFixed(0)}%`;
+      tensionMeter.style.width = `${tension.toFixed(0)}%`;
+    }
+
     function renderSharedState(shared) {
-      if (!shared) return;
+      if (!shared) {
+        applyAdaptiveInterface(null, 0, 0);
+        return;
+      }
       const graph = shared.adaptive_state_graph || {};
       sharedMarker.textContent = graph.marker || shared.engine_state?.marker || '-';
       sharedTrust.textContent = graph.trust ?? '-';
@@ -302,6 +483,7 @@
       const mem = shared.adaptive_memory?.size ?? shared.engine_memory_size ?? 0;
       sharedMemorySize.textContent = String(mem);
       sharedEvents.textContent = String((shared.recent_events || []).length);
+      applyAdaptiveInterface(sharedMarker.textContent, graph.trust, graph.tension);
     }
 
     async function pullSharedState() {
@@ -330,6 +512,7 @@
       }
 
       statusLine.textContent = 'API offline. Running local simulation fallback.';
+      applyAdaptiveInterface(null, 0, 0);
     }
 
     const mind = {

@@ -5,25 +5,56 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Oroboro Creative Studio</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
     :root {
       color-scheme: dark;
-      --bg: #050816;
-      --panel: rgba(8, 14, 32, 0.94);
-      --line: rgba(111, 239, 255, 0.22);
-      --accent: #6fefff;
-      --accent2: #ff7ce5;
-      --text: #f5f8ff;
-      --muted: #92a4c7;
+      --bg: #061523;
+      --panel: rgba(8, 18, 30, 0.9);
+      --line: rgba(72, 215, 198, 0.3);
+      --accent: #48d7c6;
+      --accent2: #ff9f43;
+      --text: #f3faf8;
+      --muted: #8eaeb7;
+      --glow: rgba(72, 215, 198, 0.2);
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: "Segoe UI", Tahoma, sans-serif;
-      background: radial-gradient(circle at top, #162449, #050816 70%);
+      font-family: "Space Grotesk", "Avenir Next", sans-serif;
+      background: radial-gradient(circle at top, #1a4f62, #061523 64%, #05080f);
       color: var(--text);
       padding: 18px;
+      position: relative;
+      overflow-x: hidden;
     }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      width: 36vmax;
+      height: 36vmax;
+      border-radius: 50%;
+      filter: blur(58px);
+      opacity: 0.34;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    body::before {
+      left: -12vmax;
+      top: -12vmax;
+      background: rgba(72, 215, 198, 0.38);
+    }
+
+    body::after {
+      right: -10vmax;
+      bottom: -14vmax;
+      background: rgba(255, 159, 67, 0.3);
+    }
+
     .app {
       display: grid;
       grid-template-columns: 260px 1fr 320px;
@@ -35,13 +66,14 @@
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 20px;
-      box-shadow: 0 0 28px rgba(0,0,0,0.25);
+      box-shadow: 0 16px 36px rgba(0,0,0,0.32), 0 0 18px var(--glow);
       overflow: hidden;
+      backdrop-filter: blur(8px);
     }
     .toolbar, .inspector { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
     .toolbar h3, .inspector h3 { margin: 0 0 6px; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--accent); }
     .tool-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-    .mode-pill { display: inline-block; padding: 4px 8px; border-radius: 999px; background: rgba(111,239,255,0.12); color: var(--accent); font-size: 0.78rem; }
+    .mode-pill { display: inline-block; padding: 4px 8px; border-radius: 999px; background: rgba(72,215,198,0.12); color: var(--accent); font-size: 0.78rem; }
     button, .swatch, input[type="range"] { border-radius: 10px; }
     button {
       border: 1px solid rgba(255,255,255,0.12);
@@ -70,8 +102,52 @@
     .canvas-shell { display: flex; flex-direction: column; padding: 12px; gap: 10px; }
     .canvas-topbar {
       display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      flex-wrap: wrap;
+      gap: 8px;
     }
     .canvas-topbar .badge { color: var(--accent); font-size: 0.85rem; }
+    .mode-chip {
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(255,159,67,0.15);
+      border: 1px solid rgba(255,159,67,0.38);
+      color: #ffd9ad;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .state-ribbon {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .state-meter {
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 10px;
+      padding: 7px;
+      background: rgba(255,255,255,0.04);
+    }
+    .state-meter-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+    .state-meter-track {
+      height: 7px;
+      border-radius: 999px;
+      margin-top: 7px;
+      background: rgba(255,255,255,0.1);
+      overflow: hidden;
+    }
+    .state-meter-fill {
+      height: 100%;
+      width: 0%;
+      transition: width 0.35s ease;
+      border-radius: inherit;
+    }
+    #trust-meter { background: linear-gradient(90deg, #36d399, #8ce99a); }
+    #tension-meter { background: linear-gradient(90deg, #ff7a59, #ffb347); }
     canvas {
       width: 100%;
       height: 100%;
@@ -100,9 +176,15 @@
     .nav-links a { color: var(--accent); text-decoration: none; font-size: 0.8rem; }
     .preset-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
     .preset { padding: 7px 8px; font-size: 0.78rem; }
+    body[data-core-mode="flow"] { --glow: rgba(72, 215, 198, 0.24); }
+    body[data-core-mode="alert"] { --glow: rgba(255, 122, 89, 0.24); }
+    body[data-core-mode="focus"] { --glow: rgba(255, 168, 90, 0.24); }
+    body[data-core-mode="reflective"] { --glow: rgba(102, 191, 255, 0.24); }
+    body[data-core-mode="offline"] { --glow: rgba(142, 174, 183, 0.2); }
     @media (max-width: 1040px) {
       .app { grid-template-columns: 1fr; height: auto; }
       .canvas-shell { min-height: 500px; }
+      .state-ribbon { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -142,7 +224,18 @@
           <a href="Index.html">Main</a>
           <a href="AIO.html">AIO</a>
         </div>
+        <div class="mode-chip" id="modeChip">Mode: flow</div>
         <div class="badge" id="statusBadge">Listening</div>
+      </div>
+      <div class="state-ribbon">
+        <div class="state-meter">
+          <div class="state-meter-label">Trust Energy</div>
+          <div class="state-meter-track"><div class="state-meter-fill" id="trust-meter"></div></div>
+        </div>
+        <div class="state-meter">
+          <div class="state-meter-label">Tension Energy</div>
+          <div class="state-meter-track"><div class="state-meter-fill" id="tension-meter"></div></div>
+        </div>
       </div>
       <canvas id="canvas"></canvas>
     </div>
@@ -152,6 +245,11 @@
       <div class="stat">
         <strong>State:</strong> <span id="engineState">AWAKENING</span><br />
         <strong>Thought:</strong> <span id="engineThought">Waiting for the first mark</span>
+      </div>
+      <div class="stat">
+        <strong>Shared Core:</strong> <span id="sharedMode">flow</span><br />
+        <strong>Marker:</strong> <span id="sharedMarker">-</span><br />
+        <strong>Trust:</strong> <span id="sharedTrust">-</span> | <strong>Tension:</strong> <span id="sharedTension">-</span>
       </div>
       <div class="stat">
         <strong>Current Mood:</strong> <span id="engineMood">curious</span>
@@ -203,6 +301,13 @@
     const partnerEcho = document.getElementById('partnerEcho');
     const designNote = document.getElementById('designNote');
     const statusBadge = document.getElementById('statusBadge');
+    const modeChip = document.getElementById('modeChip');
+    const trustMeter = document.getElementById('trust-meter');
+    const tensionMeter = document.getElementById('tension-meter');
+    const sharedMode = document.getElementById('sharedMode');
+    const sharedMarker = document.getElementById('sharedMarker');
+    const sharedTrust = document.getElementById('sharedTrust');
+    const sharedTension = document.getElementById('sharedTension');
     const currentMode = document.getElementById('currentMode');
     const toolButtons = Array.from(document.querySelectorAll('.tool'));
     const presetButtons = Array.from(document.querySelectorAll('.preset'));
@@ -250,10 +355,28 @@
         const payload = await response.json();
         if (response.ok && payload.ok) {
           sharedCoreState = payload.shared;
+          updateEngineUI();
         }
       } catch (error) {
         sharedCoreState = null;
+        updateEngineUI();
       }
+    }
+
+    function normalizePercent(value) {
+      if (value === undefined || value === null || Number.isNaN(Number(value))) return 0;
+      const n = Number(value);
+      if (n >= 0 && n <= 1) return Math.max(0, Math.min(100, n * 100));
+      return Math.max(0, Math.min(100, n));
+    }
+
+    function deriveCoreMode(marker, trust, tension) {
+      const state = String(marker || '').toLowerCase();
+      if (!marker) return 'offline';
+      if (tension >= 68 || state.includes('block') || state.includes('alert')) return 'alert';
+      if (state.includes('discover') || state.includes('open') || state.includes('acting')) return 'focus';
+      if (trust >= 62 && tension < 40) return 'flow';
+      return 'reflective';
     }
 
     function resizeCanvas() {
@@ -293,6 +416,17 @@
       currentMode.textContent = presetLabels[activePreset] || 'Calm drift';
       const trust = sharedCoreState?.adaptive_state_graph?.trust;
       const tension = sharedCoreState?.adaptive_state_graph?.tension;
+      const trustPct = normalizePercent(trust);
+      const tensionPct = normalizePercent(tension);
+      const mode = deriveCoreMode(marker, trustPct, tensionPct);
+      document.body.dataset.coreMode = mode;
+      modeChip.textContent = `Mode: ${mode}`;
+      sharedMode.textContent = mode;
+      sharedMarker.textContent = marker || '-';
+      sharedTrust.textContent = trust ?? '-';
+      sharedTension.textContent = tension ?? '-';
+      trustMeter.style.width = `${trustPct.toFixed(0)}%`;
+      tensionMeter.style.width = `${tensionPct.toFixed(0)}%`;
       const coreOverlay = trust !== undefined && tension !== undefined
         ? ` Core trust ${trust}, tension ${tension}.`
         : '';
