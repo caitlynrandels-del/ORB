@@ -3,135 +3,944 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ORB Product App</title>
+  <title>ORB MemoryOS</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500&display=swap');
 
     :root {
       color-scheme: dark;
-      --bg: #061523;
-      --panel: rgba(8, 18, 30, 0.92);
-      --line: rgba(72, 215, 198, 0.3);
-      --accent: #48d7c6;
-      --text: #f3faf8;
-      --muted: #8eaeb7;
+      --bg: #071018;
+      --panel: rgba(11, 19, 30, 0.86);
+      --line: rgba(92, 212, 191, 0.26);
+      --accent: #5cd4bf;
+      --accent2: #ffb65a;
+      --text: #ebf8f4;
+      --muted: #90a8a3;
+      --danger: #ff8b79;
+      --ok: #82e6aa;
+      --glow: rgba(92, 212, 191, 0.2);
     }
 
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       min-height: 100vh;
       font-family: "Space Grotesk", "Avenir Next", sans-serif;
-      background: radial-gradient(circle at top, #1a4f62 0%, var(--bg) 56%, #05080f 100%);
       color: var(--text);
+      background:
+        radial-gradient(45vmax 35vmax at 12% -10%, rgba(92, 212, 191, 0.25), transparent 70%),
+        radial-gradient(40vmax 35vmax at 92% 110%, rgba(255, 182, 90, 0.2), transparent 72%),
+        linear-gradient(160deg, #0a1721, var(--bg) 60%, #05090f);
+      overflow: hidden;
+    }
+
+    .app {
       display: grid;
       grid-template-rows: auto 1fr;
+      min-height: 100vh;
     }
 
     .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: 1fr auto auto;
       gap: 12px;
-      flex-wrap: wrap;
-      padding: 12px;
+      align-items: center;
+      padding: 12px 16px;
       border-bottom: 1px solid var(--line);
-      background: var(--panel);
-      backdrop-filter: blur(8px);
+      background: rgba(9, 16, 26, 0.78);
+      backdrop-filter: blur(9px);
     }
 
     .brand {
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
-
-    .tabs {
       display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
     }
 
-    .tab {
-      border: 1px solid rgba(255,255,255,0.14);
+    .brand-mark {
+      width: 28px;
+      height: 28px;
+      border-radius: 9px;
+      border: 1px solid rgba(92, 212, 191, 0.4);
+      background: linear-gradient(135deg, rgba(92, 212, 191, 0.3), rgba(255, 182, 90, 0.25));
+      box-shadow: 0 0 18px rgba(92, 212, 191, 0.25);
+    }
+
+    .brand-copy {
+      min-width: 0;
+    }
+
+    .brand-title {
+      font-family: "Fraunces", serif;
+      font-size: 1.08rem;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand-subtitle {
+      color: var(--muted);
+      font-size: 0.76rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .surface-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .surface-tab {
+      border: 1px solid rgba(255, 255, 255, 0.14);
       border-radius: 999px;
       padding: 7px 12px;
-      font-size: 0.86rem;
-      background: rgba(255,255,255,0.06);
+      background: rgba(255, 255, 255, 0.05);
       color: var(--text);
+      font-size: 0.82rem;
       cursor: pointer;
+      transition: 150ms ease;
     }
 
-    .tab.active {
-      background: rgba(72, 215, 198, 0.2);
-      border-color: rgba(72, 215, 198, 0.5);
-      color: #d9fff9;
+    .surface-tab.active {
+      border-color: rgba(92, 212, 191, 0.58);
+      background: rgba(92, 212, 191, 0.2);
+      color: #ddfff7;
+      box-shadow: 0 0 16px rgba(92, 212, 191, 0.2);
     }
 
-    .status {
+    .statusline {
+      justify-self: end;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--danger);
+      box-shadow: 0 0 8px rgba(255, 139, 121, 0.45);
+    }
+
+    .dot.online {
+      background: var(--ok);
+      box-shadow: 0 0 8px rgba(130, 230, 170, 0.55);
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 280px 1fr 340px;
+      gap: 12px;
+      padding: 12px;
+      min-height: 0;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.32), 0 0 20px var(--glow);
+      backdrop-filter: blur(8px);
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-title {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.11em;
+      color: var(--accent);
+    }
+
+    .panel-body {
+      padding: 12px 14px;
+      overflow: auto;
+      min-height: 0;
+    }
+
+    .metric-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .chip {
+      display: inline-block;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .chip.mode-flow { border-color: rgba(92, 212, 191, 0.55); color: #cdfff4; }
+    .chip.mode-focus { border-color: rgba(255, 182, 90, 0.55); color: #ffe4be; }
+    .chip.mode-alert { border-color: rgba(255, 139, 121, 0.65); color: #ffd5cc; }
+    .chip.mode-reflective { border-color: rgba(126, 174, 240, 0.55); color: #dcecff; }
+    .chip.mode-offline { border-color: rgba(170, 170, 170, 0.45); color: #d7d7d7; }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
       font-size: 0.82rem;
       color: var(--muted);
     }
 
-    .frame-wrap {
-      padding: 12px;
-      height: calc(100vh - 68px);
+    .meter {
+      display: grid;
+      gap: 6px;
+    }
+
+    .meter label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .track {
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      overflow: hidden;
+    }
+
+    .fill {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      transition: width 220ms ease;
+    }
+
+    .trust { background: linear-gradient(90deg, #40d89f, #a2f0b8); }
+    .tension { background: linear-gradient(90deg, #ff8b79, #ffc16a); }
+
+    .event-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 6px;
+    }
+
+    .event-list li {
+      font-size: 0.79rem;
+      color: var(--muted);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .center {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: 1fr;
+    }
+
+    .command-center,
+    .embedded-center {
+      min-height: 0;
+      display: none;
+      grid-template-rows: 1fr auto auto;
+    }
+
+    .command-center.active,
+    .embedded-center.active {
+      display: grid;
+    }
+
+    .conversation {
+      overflow: auto;
+      display: grid;
+      gap: 9px;
+      padding: 14px;
+      align-content: start;
+    }
+
+    .bubble {
+      max-width: 86%;
+      border-radius: 12px;
+      padding: 10px 11px;
+      font-size: 0.87rem;
+      line-height: 1.42;
+      white-space: pre-line;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.22);
+    }
+
+    .bubble.user {
+      justify-self: end;
+      background: rgba(255, 182, 90, 0.18);
+      border-color: rgba(255, 182, 90, 0.35);
+      color: #ffe8c8;
+    }
+
+    .bubble.ai {
+      justify-self: start;
+      background: rgba(92, 212, 191, 0.16);
+      border-color: rgba(92, 212, 191, 0.35);
+      color: #d7fff5;
+    }
+
+    .quickbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 0 14px 10px;
+    }
+
+    .quick {
+      border-radius: 999px;
+      border: 1px solid rgba(92, 212, 191, 0.35);
+      background: rgba(92, 212, 191, 0.14);
+      color: #d2fff5;
+      font-size: 0.74rem;
+      padding: 7px 10px;
+      cursor: pointer;
+    }
+
+    .composer {
+      padding: 10px 14px 14px;
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 42px;
+      max-height: 150px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      padding: 10px;
+      font-family: inherit;
+      font-size: 0.86rem;
+      outline: none;
+    }
+
+    button.cta,
+    button.alt {
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      cursor: pointer;
+      padding: 0 12px;
+      font-weight: 600;
+      font-family: inherit;
+      font-size: 0.82rem;
+    }
+
+    button.cta {
+      background: linear-gradient(120deg, rgba(92, 212, 191, 0.93), rgba(255, 182, 90, 0.88));
+      color: #061017;
+      border-color: rgba(92, 212, 191, 0.5);
+    }
+
+    button.alt {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+    }
+
+    .embedded-center {
+      grid-template-rows: auto 1fr;
+    }
+
+    .embedded-note {
+      margin: 10px 14px 0;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      padding: 8px 10px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      background: rgba(255, 255, 255, 0.04);
     }
 
     iframe {
-      width: 100%;
-      height: 100%;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: #0b121e;
+      margin: 10px 14px 14px;
+      width: calc(100% - 28px);
+      height: calc(100% - 24px);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: #0a1019;
+    }
+
+    .artifact-list {
+      display: grid;
+      gap: 8px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .artifact {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      display: grid;
+      gap: 6px;
+    }
+
+    .artifact-title {
+      color: #d4fff5;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .artifact-body {
+      color: var(--muted);
+      font-size: 0.79rem;
+      line-height: 1.35;
+      white-space: pre-line;
+    }
+
+    .artifact-meta {
+      color: #b8d8d1;
+      font-size: 0.73rem;
+      letter-spacing: 0.03em;
+    }
+
+    .empty-note {
+      font-size: 0.8rem;
+      color: var(--muted);
+      border: 1px dashed rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      padding: 10px;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .kpi {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 8px;
+      font-size: 0.74rem;
+      color: var(--muted);
+    }
+
+    .kpi strong {
+      display: block;
+      color: #d7fff5;
+      font-size: 0.86rem;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 1240px) {
+      .workspace {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto minmax(50vh, 1fr) auto;
+        overflow: auto;
+      }
+
+      .topbar {
+        grid-template-columns: 1fr;
+      }
+
+      .statusline {
+        justify-self: start;
+      }
+
+      body {
+        overflow: auto;
+      }
     }
   </style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">ORB Product App</div>
-    <nav class="tabs">
-      <button class="tab active" data-src="AIO.html">AIO</button>
-      <button class="tab" data-src="Index.html">World</button>
-      <button class="tab" data-src="CreativeStudio.html">Studio</button>
-    </nav>
-    <div class="status" id="status">Loading...</div>
-  </header>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"></div>
+        <div class="brand-copy">
+          <div class="brand-title">ORB MemoryOS Control Center</div>
+          <div class="brand-subtitle">Single-window decision continuity app</div>
+        </div>
+      </div>
 
-  <main class="frame-wrap">
-    <iframe id="view" src="AIO.html" title="ORB App View"></iframe>
-  </main>
+      <nav class="surface-tabs">
+        <button class="surface-tab active" data-surface="command">Command Center</button>
+        <button class="surface-tab" data-surface="aio">AIO</button>
+        <button class="surface-tab" data-surface="world">World</button>
+        <button class="surface-tab" data-surface="studio">Studio</button>
+      </nav>
+
+      <div class="statusline">
+        <span class="dot" id="api-dot"></span>
+        <span id="api-status">Core offline</span>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Adaptive Telemetry</div>
+          <span class="chip mode-offline" id="mode-chip">offline</span>
+        </div>
+        <div class="panel-body metric-grid">
+          <div class="meta-row"><span>Marker</span><strong id="marker-value">-</strong></div>
+          <div class="meta-row"><span>Preference</span><strong id="preference-value">-</strong></div>
+          <div class="meta-row"><span>Memory Size</span><strong id="memory-value">0</strong></div>
+          <div class="meta-row"><span>Recent Events</span><strong id="event-count">0</strong></div>
+
+          <div class="meter">
+            <label>Trust Energy</label>
+            <div class="track"><div class="fill trust" id="trust-fill"></div></div>
+            <div class="meta-row"><span>Trust</span><strong id="trust-value">0</strong></div>
+          </div>
+
+          <div class="meter">
+            <label>Tension Energy</label>
+            <div class="track"><div class="fill tension" id="tension-fill"></div></div>
+            <div class="meta-row"><span>Tension</span><strong id="tension-value">0</strong></div>
+          </div>
+
+          <div>
+            <div class="panel-title" style="margin-bottom: 8px;">Recent Core Events</div>
+            <ul class="event-list" id="event-list"></ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel center">
+        <div class="command-center active" id="command-center">
+          <div class="conversation" id="conversation"></div>
+
+          <div class="quickbar">
+            <button class="quick" data-prompt="summarize the decision and owner">Decision Summary</button>
+            <button class="quick" data-prompt="identify blockers and next step">Blocker Triage</button>
+            <button class="quick" data-prompt="draft a pilot handoff note">Handoff Note</button>
+            <button class="quick" data-prompt="what KPI should we improve this week">KPI Focus</button>
+            <button class="quick" data-prompt="convert latest context into an executive update">Executive Update</button>
+          </div>
+
+          <div class="composer">
+            <textarea id="prompt" placeholder="Describe the decision, blocker, or handoff you need..."></textarea>
+            <button class="cta" id="send">Send</button>
+            <button class="alt" id="reset">Reset</button>
+          </div>
+        </div>
+
+        <div class="embedded-center" id="embedded-center">
+          <div class="embedded-note" id="embedded-note">Embedded surface</div>
+          <iframe id="surface-frame" src="AIO.html" title="ORB Surface"></iframe>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Industry Output</div>
+          <span class="chip" id="kpi-chip">KPI: Context Retention</span>
+        </div>
+        <div class="panel-body">
+          <div class="empty-note" id="artifact-empty">Run a prompt in Command Center to generate execution-ready artifacts.</div>
+          <ul class="artifact-list" id="artifact-list"></ul>
+
+          <div class="panel-title" style="margin: 12px 0 8px;">Pilot Metrics Pulse</div>
+          <div class="kpi-grid">
+            <div class="kpi">Context Retention<strong id="kpi-retention">-</strong></div>
+            <div class="kpi">Rework Reduction<strong id="kpi-rework">-</strong></div>
+            <div class="kpi">Cycle-Time Gain<strong id="kpi-cycle">-</strong></div>
+            <div class="kpi">Trust Signal<strong id="kpi-trust">-</strong></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
 
   <script>
-    const view = document.getElementById('view');
-    const tabs = Array.from(document.querySelectorAll('.tab'));
-    const status = document.getElementById('status');
+    const API_BASE = 'http://127.0.0.1:8010';
 
-    function activateTab(button) {
-      tabs.forEach(tab => tab.classList.toggle('active', tab === button));
-      const src = button.dataset.src;
-      view.src = src;
-      status.textContent = `Viewing ${button.textContent}`;
+    const state = {
+      apiOnline: false,
+      currentSurface: 'command',
+      shared: null,
+      artifacts: [],
+      fallbackCounter: 0
+    };
+
+    const ui = {
+      apiDot: document.getElementById('api-dot'),
+      apiStatus: document.getElementById('api-status'),
+      modeChip: document.getElementById('mode-chip'),
+      marker: document.getElementById('marker-value'),
+      preference: document.getElementById('preference-value'),
+      memory: document.getElementById('memory-value'),
+      eventCount: document.getElementById('event-count'),
+      trustFill: document.getElementById('trust-fill'),
+      tensionFill: document.getElementById('tension-fill'),
+      trustValue: document.getElementById('trust-value'),
+      tensionValue: document.getElementById('tension-value'),
+      eventList: document.getElementById('event-list'),
+      conversation: document.getElementById('conversation'),
+      prompt: document.getElementById('prompt'),
+      send: document.getElementById('send'),
+      reset: document.getElementById('reset'),
+      tabs: Array.from(document.querySelectorAll('.surface-tab')),
+      quick: Array.from(document.querySelectorAll('.quick')),
+      commandCenter: document.getElementById('command-center'),
+      embeddedCenter: document.getElementById('embedded-center'),
+      embeddedNote: document.getElementById('embedded-note'),
+      surfaceFrame: document.getElementById('surface-frame'),
+      artifactList: document.getElementById('artifact-list'),
+      artifactEmpty: document.getElementById('artifact-empty'),
+      kpiChip: document.getElementById('kpi-chip'),
+      kpiRetention: document.getElementById('kpi-retention'),
+      kpiRework: document.getElementById('kpi-rework'),
+      kpiCycle: document.getElementById('kpi-cycle'),
+      kpiTrust: document.getElementById('kpi-trust')
+    };
+
+    function normalizePercent(value) {
+      if (value === undefined || value === null || Number.isNaN(Number(value))) return 0;
+      const n = Number(value);
+      if (n >= 0 && n <= 1) return Math.max(0, Math.min(100, n * 100));
+      return Math.max(0, Math.min(100, n));
     }
 
-    tabs.forEach(button => {
-      button.addEventListener('click', () => activateTab(button));
-    });
+    function deriveCoreMode(marker, trust, tension) {
+      const m = String(marker || '').toLowerCase();
+      if (!marker) return 'offline';
+      if (tension >= 68 || m.includes('block') || m.includes('alert')) return 'alert';
+      if (m.includes('discover') || m.includes('open') || m.includes('acting')) return 'focus';
+      if (trust >= 62 && tension < 40) return 'flow';
+      return 'reflective';
+    }
 
-    async function checkApi() {
+    function setModeChip(mode) {
+      ui.modeChip.className = `chip mode-${mode}`;
+      ui.modeChip.textContent = mode;
+    }
+
+    function renderEvents(events) {
+      ui.eventList.innerHTML = '';
+      if (!events.length) {
+        const li = document.createElement('li');
+        li.textContent = 'No cross-surface events yet.';
+        ui.eventList.appendChild(li);
+        return;
+      }
+
+      events.slice(-5).reverse().forEach(event => {
+        const li = document.createElement('li');
+        if (typeof event === 'string') {
+          li.textContent = event;
+        } else {
+          const name = event.event || event.type || 'event';
+          const detail = event.detail || event.input || '';
+          li.textContent = `${name}: ${String(detail).slice(0, 80)}`;
+        }
+        ui.eventList.appendChild(li);
+      });
+    }
+
+    function renderShared(shared) {
+      state.shared = shared;
+      if (!shared) {
+        setModeChip('offline');
+        ui.marker.textContent = '-';
+        ui.preference.textContent = '-';
+        ui.memory.textContent = '0';
+        ui.eventCount.textContent = '0';
+        ui.trustFill.style.width = '0%';
+        ui.tensionFill.style.width = '0%';
+        ui.trustValue.textContent = '0';
+        ui.tensionValue.textContent = '0';
+        renderEvents([]);
+        return;
+      }
+
+      const graph = shared.adaptive_state_graph || {};
+      const marker = graph.marker || shared.engine_state?.marker || '-';
+      const trust = normalizePercent(graph.trust);
+      const tension = normalizePercent(graph.tension);
+      const mode = deriveCoreMode(marker, trust, tension);
+
+      setModeChip(mode);
+      ui.marker.textContent = marker;
+      ui.preference.textContent = graph.preference || '-';
+      ui.memory.textContent = String(shared.adaptive_memory?.size ?? shared.engine_memory_size ?? 0);
+      ui.eventCount.textContent = String((shared.recent_events || []).length);
+      ui.trustFill.style.width = `${trust.toFixed(0)}%`;
+      ui.tensionFill.style.width = `${tension.toFixed(0)}%`;
+      ui.trustValue.textContent = trust.toFixed(0);
+      ui.tensionValue.textContent = tension.toFixed(0);
+      renderEvents(shared.recent_events || []);
+
+      const kpiFocus = tension >= 65 ? 'Rework Reduction' : trust < 45 ? 'Trust Signal' : 'Context Retention';
+      ui.kpiChip.textContent = `KPI: ${kpiFocus}`;
+      ui.kpiRetention.textContent = `${Math.max(45, Math.min(95, trust)).toFixed(0)}%`;
+      ui.kpiRework.textContent = `${Math.max(12, Math.min(45, (100 - tension) * 0.45)).toFixed(0)}%`;
+      ui.kpiCycle.textContent = `${Math.max(8, Math.min(38, trust * 0.32)).toFixed(0)}%`;
+      ui.kpiTrust.textContent = `${Math.max(2.6, Math.min(4.9, 2 + trust / 38)).toFixed(1)}/5`;
+    }
+
+    function setApiStatus(online) {
+      state.apiOnline = online;
+      ui.apiDot.classList.toggle('online', online);
+      ui.apiStatus.textContent = online ? 'Core online' : 'Core offline (fallback active)';
+    }
+
+    function addBubble(role, text) {
+      const div = document.createElement('div');
+      div.className = `bubble ${role}`;
+      div.textContent = text;
+      ui.conversation.appendChild(div);
+      ui.conversation.scrollTop = ui.conversation.scrollHeight;
+    }
+
+    function addArtifactCard(brief) {
+      state.artifacts.unshift(brief);
+      if (state.artifacts.length > 8) state.artifacts.length = 8;
+
+      ui.artifactEmpty.style.display = state.artifacts.length ? 'none' : 'block';
+      ui.artifactList.innerHTML = '';
+
+      state.artifacts.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'artifact';
+        li.innerHTML = `
+          <div class="artifact-title">${item.title}</div>
+          <div class="artifact-body">${item.body}</div>
+          <div class="artifact-meta">Owner: ${item.owner} | Due: ${item.due}</div>
+        `;
+        ui.artifactList.appendChild(li);
+      });
+    }
+
+    function fallbackBrief(input) {
+      state.fallbackCounter += 1;
+      const owner = 'Ops Lead';
+      const due = state.fallbackCounter % 2 ? '48h' : '72h';
+      return {
+        title: `Fallback brief #${state.fallbackCounter}`,
+        body: [
+          `Signal: ${input}`,
+          'Action: Convert this signal into one decision, one owner, one due date.',
+          'Impact: Preserves decision continuity while core is offline.',
+          'Handoff: Post update in shared channel with artifact link.'
+        ].join('\n'),
+        owner,
+        due
+      };
+    }
+
+    function parseCoreBrief(input, payload) {
+      const result = payload.result || {};
+      const meaning = result.meaning || {};
+      const action = result.action || {};
+      const graph = payload.adaptive?.state_graph || {};
+      const marker = result.state?.marker || graph.marker || 'PROCESSING';
+      const trust = graph.trust ?? '-';
+      const tension = graph.tension ?? '-';
+
+      const actionMap = {
+        discover: 'Capture discovery, owner, and validation step.',
+        remember: 'Record decision + rationale + artifact link.',
+        observe: 'Turn observation into one concrete action today.',
+        act: 'Assign owner and due date now.'
+      };
+
+      const intent = meaning.intent || 'observe';
+      const concept = meaning.concept || input;
+      const nextMove = action.action_hint || 'observe';
+      const kpiFocus = tension !== '-' && Number(tension) >= 65
+        ? 'Rework Reduction'
+        : trust !== '-' && Number(trust) < 45
+          ? 'Trust Signal'
+          : 'Context Retention';
+
+      return {
+        title: `Action Brief: ${concept}`,
+        body: [
+          `Intent: ${intent}`,
+          `Recommended action: ${actionMap[intent] || actionMap.observe}`,
+          `Core next move: ${nextMove}`,
+          `KPI focus: ${kpiFocus}`,
+          `Core state: marker=${marker}, trust=${trust}, tension=${tension}`,
+          'Handoff: Share owner + due date in one channel to keep continuity.'
+        ].join('\n'),
+        owner: 'Assigned by team lead',
+        due: 'Next standup'
+      };
+    }
+
+    async function callCoreLoop(input) {
+      const response = await fetch(`${API_BASE}/api/loop`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input, source: 'app_command_center' })
+      });
+
+      if (!response.ok) {
+        throw new Error(`loop failed with ${response.status}`);
+      }
+
+      const payload = await response.json();
+      if (!payload.ok) {
+        throw new Error(payload.error || 'loop rejected');
+      }
+
+      return payload;
+    }
+
+    async function publishEvent(name, detail) {
       try {
-        const response = await fetch('http://127.0.0.1:8010/api/health');
+        await fetch(`${API_BASE}/api/event`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event: name, detail, source: 'app' })
+        });
+      } catch (error) {
+        // Keep UX responsive while offline.
+      }
+    }
+
+    async function checkHealth() {
+      try {
+        const response = await fetch(`${API_BASE}/api/health`);
         const payload = await response.json();
         if (response.ok && payload.ok) {
-          status.textContent = 'Core online';
+          setApiStatus(true);
+          renderShared(payload.shared);
           return;
         }
-      } catch (error) {}
-      status.textContent = 'Core offline (UI fallback active)';
+      } catch (error) {
+        // fall through to offline
+      }
+      setApiStatus(false);
+      if (!state.shared) renderShared(null);
     }
 
-    checkApi();
-    window.setInterval(checkApi, 5000);
+    async function pullSharedState() {
+      if (!state.apiOnline) return;
+      try {
+        const response = await fetch(`${API_BASE}/api/state`);
+        const payload = await response.json();
+        if (response.ok && payload.ok) {
+          renderShared(payload.shared);
+        }
+      } catch (error) {
+        // keep current values
+      }
+    }
+
+    async function sendPrompt() {
+      const input = ui.prompt.value.trim();
+      if (!input) return;
+
+      addBubble('user', input);
+      ui.prompt.value = '';
+
+      if (state.apiOnline) {
+        try {
+          const payload = await callCoreLoop(input);
+          const brief = parseCoreBrief(input, payload);
+          addBubble('ai', brief.body);
+          addArtifactCard(brief);
+          renderShared(payload.shared || state.shared);
+          publishEvent('decision_brief', brief.title);
+          return;
+        } catch (error) {
+          setApiStatus(false);
+        }
+      }
+
+      const fallback = fallbackBrief(input);
+      addBubble('ai', fallback.body);
+      addArtifactCard(fallback);
+    }
+
+    function resetConversation() {
+      ui.conversation.innerHTML = '';
+      state.artifacts = [];
+      ui.artifactList.innerHTML = '';
+      ui.artifactEmpty.style.display = 'block';
+      addBubble('ai', 'Welcome to ORB MemoryOS. Describe a decision, blocker, or handoff and I will convert it into an industry-ready action brief.');
+    }
+
+    function switchSurface(surface) {
+      state.currentSurface = surface;
+      ui.tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.surface === surface));
+
+      if (surface === 'command') {
+        ui.commandCenter.classList.add('active');
+        ui.embeddedCenter.classList.remove('active');
+        return;
+      }
+
+      const srcMap = {
+        aio: 'AIO.html',
+        world: 'Index.html',
+        studio: 'CreativeStudio.html'
+      };
+
+      const labelMap = {
+        aio: 'Embedded AIO surface',
+        world: 'Embedded World surface',
+        studio: 'Embedded Studio surface'
+      };
+
+      ui.commandCenter.classList.remove('active');
+      ui.embeddedCenter.classList.add('active');
+      ui.embeddedNote.textContent = `${labelMap[surface]} (single window mode)`;
+      ui.surfaceFrame.src = srcMap[surface];
+    }
+
+    ui.send.addEventListener('click', sendPrompt);
+    ui.reset.addEventListener('click', resetConversation);
+    ui.prompt.addEventListener('keydown', event => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendPrompt();
+      }
+    });
+
+    ui.quick.forEach(button => {
+      button.addEventListener('click', () => {
+        ui.prompt.value = button.dataset.prompt || '';
+        sendPrompt();
+      });
+    });
+
+    ui.tabs.forEach(tab => {
+      tab.addEventListener('click', () => switchSurface(tab.dataset.surface));
+    });
+
+    resetConversation();
+    checkHealth();
+    window.setInterval(checkHealth, 6000);
+    window.setInterval(pullSharedState, 3500);
   </script>
 </body>
 </html>
