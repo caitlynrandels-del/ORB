@@ -1,0 +1,53 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "init-orb-git",
+      "type": "shell",
+      "command": "git init; git add .; git commit -m \"Initial commit\"; git branch -M main; git remote add origin https://github.com/YOUR_USERNAME/ORB.git; git status -sb; git remote -v",
+      "isBackground": false
+    },
+    {
+      "label": "commit-orb-git-with-local-identity",
+      "type": "shell",
+      "command": "git config user.name Caitl; git config user.email caitl@local.invalid; git commit -m initial_commit; git status -sb; git remote -v; git log --oneline -n 1",
+      "isBackground": false
+    },
+    {
+      "label": "push-orb-to-caitlyn-repo",
+      "type": "shell",
+      "command": "git remote set-url origin https://github.com/caitlynrandels-del/ORB; git remote -v; git push -u origin main",
+      "isBackground": false
+    },
+    {
+      "label": "rebase-and-push-orb",
+      "type": "shell",
+      "command": "git pull --rebase origin main; git push -u origin main",
+      "isBackground": false
+    },
+    {
+      "label": "verify-oneclick-launcher",
+      "type": "shell",
+      "command": ".venv\\Scripts\\python.exe -c 'import urllib.request, json; print(\"api_ok=\", json.load(urllib.request.urlopen(\"http://127.0.0.1:8010/api/health\"))[\"ok\"]); print(\"app_ok=\", urllib.request.urlopen(\"http://localhost:8000/App.html\").status)'",
+      "isBackground": false
+    },
+    {
+      "label": "commit-one-window-launcher",
+      "type": "shell",
+      "command": "git add open_product.bat open_product.ps1 ORB/App.html; git commit -m one_click_single_window_product_launcher; git push; git log --oneline -n 1; git status -sb",
+      "isBackground": false
+    },
+    {
+      "label": "commit-review-driven-redesign",
+      "type": "shell",
+      "command": "git add core/oroboro_mind.py language/interpreter.py api_server.py ORB/App.html docs/product/01-v1-prd.md docs/product/00-investor-packet.md; git commit -m review_driven_confidence_loop_and_flagship_redesign; git push; git log --oneline -n 1; git status -sb",
+      "isBackground": false
+    },
+    {
+      "label": "commit-sproutlab-product",
+      "type": "shell",
+      "command": "git add ORB/SproutLab.html ORB/App.html; git commit -m sproutlab_npc_sentience_science_app; git push; git log --oneline -n 1; git status -sb",
+      "isBackground": false
+    }
+  ]
+}
