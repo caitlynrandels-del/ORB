@@ -1,7 +1,11 @@
 # Oroboro MemoryOS 3-Minute Demo Script
 
 ## Goal
-Show that Oroboro preserves context across surfaces and adapts behavior over time.
+Show that Oroboro preserves decision continuity across surfaces and adapts behavior over time.
+
+## Variable Frame
+- Industry variable: Decision continuity
+- Product claim: Oroboro MemoryOS operationalizes decision continuity in real workflows.
 
 ## Demo Setup (before call)
 1. Start API: start_api.bat
@@ -13,7 +17,7 @@ Show that Oroboro preserves context across surfaces and adapts behavior over tim
 
 ## Talk Track
 ### 0:00-0:30 Problem
-"Most AI tools forget what your team already decided. Oroboro solves that by maintaining shared memory and adaptive state across modes."
+"Most AI tools forget what your team already decided. Oroboro solves that by maintaining decision continuity through shared memory and adaptive state across modes."
 
 ### 0:30-1:15 AIO (Chat Signal)
 1. In AIO, send: "remember artifact path".

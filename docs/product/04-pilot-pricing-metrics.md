@@ -1,5 +1,9 @@
 # Oroboro MemoryOS Pilot Pricing and Success Metrics
 
+## Industry Variable Assignment
+- Industry variable: Decision continuity
+- Product assignment: Pilot pricing and KPIs are anchored to measurable improvement in decision continuity.
+
 ## Pilot Offer
 30-day guided pilot for one team.
 

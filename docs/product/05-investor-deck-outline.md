@@ -4,6 +4,9 @@ Date: 2026-07-31
 Audience: Seed investors, strategic angels, pilot-stage innovation funds
 Goal: Secure pilot-backed funding and partner introductions
 
+Category variable: Decision continuity
+Product assignment: Oroboro MemoryOS is the decision continuity layer for AI-native teams.
+
 ## Slide 1: Cover
 Title: Oroboro MemoryOS
 Subtitle: Decision memory for AI-native teams

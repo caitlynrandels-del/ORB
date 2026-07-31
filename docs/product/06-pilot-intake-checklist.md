@@ -9,6 +9,7 @@ Owner: Founder or pilot lead
 - Primary contact name and role:
 - Team size in target workflow (5-50 ideal):
 - Industry:
+- Decision continuity pain confirmed (yes/no):
 - Decision velocity pain confirmed (yes/no):
 - AI tooling currently used:
 

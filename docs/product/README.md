@@ -2,6 +2,10 @@
 
 This folder contains the V1 launch package.
 
+Core variable assignment:
+- Industry variable: Decision continuity
+- Product assignment: Oroboro MemoryOS is the decision continuity layer.
+
 ## Files
 - 00-investor-packet.md
 - 01-v1-prd.md

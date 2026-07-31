@@ -1,5 +1,10 @@
 # Oroboro MemoryOS Landing Page Copy
 
+## Positioning Variable
+- Industry: B2B AI collaboration and workflow software
+- Industry variable: Decision continuity
+- Product role: Oroboro MemoryOS is the decision continuity layer.
+
 ## Hero
 ### Headline
 Your AI should remember what your team already learned.

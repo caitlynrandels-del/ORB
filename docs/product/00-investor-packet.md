@@ -3,6 +3,11 @@
 Date: 2026-07-31
 Status: Pilot-ready
 
+## Industry Variable Assignment
+- Industry: B2B AI collaboration and workflow software
+- Industry variable: Decision continuity
+- Product assignment: Oroboro MemoryOS is the decision continuity layer for AI-native teams.
+
 ## 1. Executive Summary
 Oroboro MemoryOS is the decision memory layer for AI-native teams. It converts fragmented activity across chat, creative, and execution surfaces into shared context that improves response quality and team velocity.
 

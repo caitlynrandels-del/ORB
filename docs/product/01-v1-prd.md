@@ -3,6 +3,11 @@
 ## Product Name
 Oroboro MemoryOS
 
+## Industry Variable Assignment
+- Industry: B2B AI collaboration and workflow software
+- Industry variable: Decision continuity
+- Product assignment: Oroboro MemoryOS is the decision continuity layer that preserves shared context across team surfaces.
+
 ## Problem
 Teams lose decision context across chat, creative work, and execution tools.
 AI assistants answer each prompt in isolation, which causes:
