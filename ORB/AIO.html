@@ -265,6 +265,7 @@
       line-height: 1.4;
       font-size: 0.95rem;
       box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      white-space: pre-line;
     }
 
     .bubble.ai { align-self: flex-start; background: rgba(111,239,255,0.14); color: #dffcff; }
@@ -304,6 +305,21 @@
     }
 
     .hint { font-size: 0.82rem; color: var(--muted); margin-top: 8px; }
+    .quick-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .quick-btn {
+      border: 1px solid rgba(72, 215, 198, 0.28);
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: rgba(72, 215, 198, 0.12);
+      color: #d9fff9;
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
     .mini-link {
       display: inline-block;
       padding: 6px 10px;
@@ -383,6 +399,12 @@
           <button id="send-btn">Send</button>
           <button id="reset-btn" class="secondary">Reset</button>
         </div>
+        <div class="quick-actions">
+          <button class="quick-btn" data-prompt="summarize the decision and owner">Decision Summary</button>
+          <button class="quick-btn" data-prompt="identify blockers and next step">Blocker Triage</button>
+          <button class="quick-btn" data-prompt="draft a pilot handoff note">Handoff Note</button>
+          <button class="quick-btn" data-prompt="what KPI should we improve this week">KPI Focus</button>
+        </div>
         <div class="hint">Try words like “memory”, “reflect”, “door”, “artifact”, “hello”, or “help”.</div>
       </section>
     </div>
@@ -409,6 +431,7 @@
     const modeChip = document.getElementById('mode-chip');
     const trustMeter = document.getElementById('trust-meter');
     const tensionMeter = document.getElementById('tension-meter');
+    const quickButtons = Array.from(document.querySelectorAll('.quick-btn'));
 
     versionBanner.textContent = `v${VERSION}`;
     console.log(`Oroboro AIO loaded: v${VERSION}`);
@@ -574,6 +597,97 @@
       return { perception, interpretation, connection, update, action, reflection };
     }
 
+    function inferIndustryTheme(input) {
+      const text = String(input || '').toLowerCase();
+      if (text.includes('kpi') || text.includes('metric') || text.includes('measure')) return 'metrics';
+      if (text.includes('block') || text.includes('risk') || text.includes('issue')) return 'risk';
+      if (text.includes('handoff') || text.includes('owner') || text.includes('team')) return 'handoff';
+      if (text.includes('pilot') || text.includes('customer') || text.includes('pricing')) return 'pilot';
+      return 'decision';
+    }
+
+    function buildIndustryFallbackReply(input, loop) {
+      const theme = inferIndustryTheme(input);
+      const moodPrefix = {
+        curious: 'I am listening with quiet curiosity.',
+        welcoming: 'I feel a soft welcome in your words.',
+        reflective: 'I am turning this over gently in memory.',
+        attentive: 'I am paying close attention to what you have offered.'
+      }[mind.mood] || 'I am here with you.';
+
+      const plans = {
+        decision: {
+          action: 'Name the decision, owner, and due date in one sentence.',
+          impact: 'Improves decision continuity and reduces repeated clarification.',
+          handoff: 'Post the final decision in the team channel and link the source artifact.'
+        },
+        metrics: {
+          action: 'Select one KPI to move this week: Context Retention, Rework Reduction, or Trust Signal.',
+          impact: 'Creates measurable proof the product is helping operations.',
+          handoff: 'Assign one person to publish baseline vs endline at week close.'
+        },
+        risk: {
+          action: 'List top blocker, root cause, and next unblock step.',
+          impact: 'Reduces stalled work and keeps pilot momentum.',
+          handoff: 'Escalate blocker if unresolved after 48 hours.'
+        },
+        handoff: {
+          action: 'Create a 3-line handoff: objective, latest decision, next action.',
+          impact: 'Prevents context loss across roles and shifts.',
+          handoff: 'Tag incoming owner and confirm acceptance.'
+        },
+        pilot: {
+          action: 'Choose one workflow and one success KPI before expansion.',
+          impact: 'Keeps pilot scoped and proves value quickly.',
+          handoff: 'Share weekly KPI review with stakeholders.'
+        }
+      };
+
+      const plan = plans[theme] || plans.decision;
+      return `${moodPrefix}\n\nIndustry Action Brief\n- Signal understood: ${loop.interpretation.text}.\n- Recommended action: ${plan.action}\n- Expected business impact: ${plan.impact}\n- Team handoff note: ${plan.handoff}`;
+    }
+
+    function buildIndustryCoreReply(text, corePayload) {
+      const coreResult = corePayload.result || {};
+      const meaning = coreResult.meaning || {};
+      const action = coreResult.action || {};
+      const state = coreResult.state || {};
+      const adaptive = corePayload.adaptive || {};
+      const marker = state.marker || 'PROCESSING';
+      const intent = meaning.intent || 'observe';
+      const concept = meaning.concept || text;
+      const hint = action.action_hint || 'observe';
+
+      const trust = adaptive.state_graph?.trust;
+      const tension = adaptive.state_graph?.tension;
+      const trustText = trust === undefined ? '-' : trust;
+      const tensionText = tension === undefined ? '-' : tension;
+
+      const intentAction = {
+        discover: 'Capture discovery, owner, and next validation step.',
+        remember: 'Write decision + rationale + link to supporting artifact.',
+        observe: 'Convert observation into one concrete team action.',
+        act: 'Assign action owner and completion date now.'
+      }[intent] || 'Assign a single owner and next step.';
+
+      const kpiFocus = tension !== undefined && tension >= 65
+        ? 'Rework Reduction'
+        : trust !== undefined && trust < 45
+          ? 'Trust Signal'
+          : 'Context Retention Rate';
+
+      return [
+        'Industry Action Brief',
+        `- Concept: ${concept}`,
+        `- Intent: ${intent}`,
+        `- Recommended action: ${intentAction}`,
+        `- Core next move: ${hint}`,
+        `- KPI focus now: ${kpiFocus}`,
+        `- Core state: marker=${marker}, trust=${trustText}, tension=${tensionText}`,
+        '- Team handoff note: Post this decision update in one shared channel with owner and due date.'
+      ].join('\n');
+    }
+
     function seedMessages() {
       initialMessages.forEach(msg => addBubble(msg.role, msg.text));
     }
@@ -623,7 +737,9 @@
       statusLine.textContent = `${mind.state}: ${mind.thought} | Mood: ${mind.mood}`;
       debugLine.textContent = `Debugging is often where the real architecture happens. Trace depth: ${mind.trace.length}`;
       renderTrace();
-      return reply;
+      const helpStyle = input.includes('hello') || input.includes('hi') || input.includes('midi');
+      if (helpStyle) return reply;
+      return buildIndustryFallbackReply(text, loop);
     }
 
     function respondWithCore(text, corePayload) {
@@ -662,7 +778,8 @@
       const adaptiveSuffix = trust !== undefined && tension !== undefined
         ? ` Adaptive state: ${adaptiveState || '-'} (trust ${trust}, tension ${tension}).`
         : '';
-      return `Core loop received your signal. Intent: ${intent}. Action: ${hint}. Marker: ${marker}.${adaptiveSuffix}`;
+      const industryReply = buildIndustryCoreReply(text, corePayload);
+      return `${industryReply}${adaptiveSuffix ? `\n${adaptiveSuffix.trim()}` : ''}`;
     }
 
     async function sendMessage() {
@@ -690,6 +807,13 @@
     resetBtn.addEventListener('click', resetSession);
     promptInput.addEventListener('keydown', event => {
       if (event.key === 'Enter') sendMessage();
+    });
+
+    quickButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        promptInput.value = button.dataset.prompt || '';
+        sendMessage();
+      });
     });
 
     try {
