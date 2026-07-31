@@ -658,7 +658,9 @@
         } else {
           const name = event.event || event.type || 'event';
           const detail = event.detail || event.input || '';
-          li.textContent = `${name}: ${String(detail).slice(0, 80)}`;
+          const confidence = event.confidence !== undefined ? ` | c=${event.confidence}` : '';
+          const mode = event.review_mode ? ` | ${event.review_mode}` : '';
+          li.textContent = `${name}: ${String(detail).slice(0, 54)}${confidence}${mode}`;
         }
         ui.eventList.appendChild(li);
       });
@@ -774,17 +776,26 @@
       const intent = meaning.intent || 'observe';
       const concept = meaning.concept || input;
       const nextMove = action.action_hint || 'observe';
+      const confidence = Number(meaning.confidence ?? 0).toFixed(2);
+      const reviewMode = meaning.review_mode || 'legacy';
+      const iterations = Array.isArray(meaning.loop_diagnostics) ? meaning.loop_diagnostics.length : 1;
       const kpiFocus = tension !== '-' && Number(tension) >= 65
         ? 'Rework Reduction'
         : trust !== '-' && Number(trust) < 45
           ? 'Trust Signal'
           : 'Context Retention';
 
+      const confidenceAction = Number(confidence) < 0.65
+        ? 'Request one clarifying detail before irreversible action.'
+        : 'Proceed with owner assignment and due date.';
+
       return {
         title: `Action Brief: ${concept}`,
         body: [
           `Intent: ${intent}`,
+          `Confidence: ${confidence} (${reviewMode}, ${iterations} pass${iterations === 1 ? '' : 'es'})`,
           `Recommended action: ${actionMap[intent] || actionMap.observe}`,
+          `Safety gate: ${confidenceAction}`,
           `Core next move: ${nextMove}`,
           `KPI focus: ${kpiFocus}`,
           `Core state: marker=${marker}, trust=${trust}, tension=${tension}`,

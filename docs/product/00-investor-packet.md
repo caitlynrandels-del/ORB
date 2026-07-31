@@ -20,6 +20,9 @@ AI usage has moved from experimentation to daily operations. Continuity is becom
 ### Core thesis
 Persistent shared memory plus adaptive state policy turns prompt-by-prompt assistance into context-aware decision support.
 
+### Decision quality engine
+Before action, the system runs a confidence-gated review loop (observe, interpret, refine) with anti-loop simplification and explicit uncertainty fallback.
+
 ## 2. Investment Snapshot
 ### What we are building
 An API-first memory and state layer that any team surface can publish to and read from.

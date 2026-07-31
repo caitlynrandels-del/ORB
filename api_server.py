@@ -159,6 +159,8 @@ class OroboroApiHandler(BaseHTTPRequestHandler):
                         "source": source,
                         "input": str(input_data),
                         "intent": result.get("meaning", {}).get("intent", "observe"),
+                        "confidence": result.get("meaning", {}).get("confidence", 0.0),
+                        "review_mode": result.get("meaning", {}).get("review_mode", "legacy"),
                         "marker": result.get("state", {}).get("marker", "PROCESSING"),
                     }
                 )
@@ -190,6 +192,8 @@ class OroboroApiHandler(BaseHTTPRequestHandler):
                     "source": source,
                     "detail": detail,
                     "intent": result.get("meaning", {}).get("intent", "observe"),
+                    "confidence": result.get("meaning", {}).get("confidence", 0.0),
+                    "review_mode": result.get("meaning", {}).get("review_mode", "legacy"),
                     "marker": result.get("state", {}).get("marker", "PROCESSING"),
                 }
             )

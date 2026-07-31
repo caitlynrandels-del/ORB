@@ -53,10 +53,15 @@ V1 covers one core workflow:
 4. Decision policy
 - Choose strategy and action_hint from state + meaning + memory history.
 
-5. Explainability
+5. Confidence review loop
+- Run iterative observe-interpret-refine passes before action.
+- Use confidence threshold and progress gating to avoid low-quality decisions.
+- Fall back to best-guess with explicit uncertainty when confidence is insufficient.
+
+6. Explainability
 - Return response plus state changes and memory summary.
 
-6. Shared UX support
+7. Shared UX support
 - Expose shared state endpoint for multi-view UI sync.
 
 ## Non-Goals (V1)
