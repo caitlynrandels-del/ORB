@@ -250,6 +250,23 @@
       white-space: pre-line;
     }
 
+    .connection-canvas {
+      width: 100%;
+      height: 180px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: radial-gradient(circle at top, #112331, #0a121a 72%);
+    }
+
+    .connection-legend {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.03em;
+    }
+
     .garden {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -430,6 +447,15 @@ If looping: simplify and recover</p>
           </div>
 
           <div class="mini">
+            <h3>Connection constellation</h3>
+            <canvas class="connection-canvas" id="connectionCanvas"></canvas>
+            <div class="connection-legend">
+              <span>thin = weak link</span>
+              <span>bright = strong signal</span>
+            </div>
+          </div>
+
+          <div class="mini">
             <h3>Memory plants</h3>
             <div class="garden" id="garden"></div>
           </div>
@@ -478,10 +504,12 @@ If looping: simplify and recover</p>
       petalInput: document.getElementById('petalInput'),
       savePetal: document.getElementById('savePetal'),
       petalList: document.getElementById('petalList'),
-      canvas: document.getElementById('labCanvas')
+      canvas: document.getElementById('labCanvas'),
+      connectionCanvas: document.getElementById('connectionCanvas')
     };
 
     const ctx = els.canvas.getContext('2d');
+    const cctx = els.connectionCanvas.getContext('2d');
 
     const state = {
       apiOnline: false,
@@ -490,7 +518,15 @@ If looping: simplify and recover</p>
       trace: [],
       plants: [],
       notes: [],
-      points: []
+      points: [],
+      connectionPulse: 0,
+      links: {
+        experimentMeaning: 0.12,
+        meaningMemory: 0.12,
+        memoryAction: 0.12,
+        actionCuteApp: 0.05,
+        coreLink: 0.05
+      }
     };
 
     function resizeCanvas() {
@@ -500,6 +536,12 @@ If looping: simplify and recover</p>
       els.canvas.height = Math.max(220, Math.floor(rect.height * ratio));
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
       renderBoard();
+
+      const crect = els.connectionCanvas.getBoundingClientRect();
+      els.connectionCanvas.width = Math.max(260, Math.floor(crect.width * ratio));
+      els.connectionCanvas.height = Math.max(140, Math.floor(crect.height * ratio));
+      cctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      renderConnections();
     }
 
     function rand(min, max) {
@@ -723,6 +765,89 @@ If looping: simplify and recover</p>
       });
     }
 
+    function nodePosition(width, height) {
+      return {
+        experiment: { x: width * 0.17, y: height * 0.24, color: '#6bd9bc', label: 'Experiment' },
+        meaning: { x: width * 0.5, y: height * 0.2, color: '#a0e9d3', label: 'Meaning' },
+        memory: { x: width * 0.8, y: height * 0.35, color: '#7fd8ff', label: 'Memory' },
+        action: { x: width * 0.66, y: height * 0.72, color: '#ffc26e', label: 'Action' },
+        cute: { x: width * 0.3, y: height * 0.75, color: '#ff9fc7', label: 'Cute App' },
+        core: { x: width * 0.12, y: height * 0.52, color: '#b5ffbe', label: 'Core' }
+      };
+    }
+
+    function drawLink(from, to, strength, color) {
+      const s = Math.max(0.05, Math.min(1, strength));
+      cctx.save();
+      cctx.strokeStyle = color;
+      cctx.globalAlpha = 0.24 + s * 0.72;
+      cctx.lineWidth = 1 + s * 3.4;
+      cctx.beginPath();
+      cctx.moveTo(from.x, from.y);
+      cctx.quadraticCurveTo((from.x + to.x) / 2, Math.min(from.y, to.y) - 12, to.x, to.y);
+      cctx.stroke();
+      cctx.restore();
+    }
+
+    function drawNode(node, pulse) {
+      cctx.save();
+      const r = 6 + pulse;
+      cctx.fillStyle = node.color;
+      cctx.globalAlpha = 0.95;
+      cctx.beginPath();
+      cctx.arc(node.x, node.y, r, 0, Math.PI * 2);
+      cctx.fill();
+      cctx.strokeStyle = 'rgba(255,255,255,0.45)';
+      cctx.lineWidth = 1;
+      cctx.stroke();
+      cctx.fillStyle = '#d6f4ec';
+      cctx.font = '11px Space Grotesk';
+      cctx.fillText(node.label, node.x + 10, node.y + 4);
+      cctx.restore();
+    }
+
+    function renderConnections() {
+      const width = els.connectionCanvas.clientWidth;
+      const height = els.connectionCanvas.clientHeight;
+      cctx.clearRect(0, 0, width, height);
+
+      const bg = cctx.createLinearGradient(0, 0, 0, height);
+      bg.addColorStop(0, '#112231');
+      bg.addColorStop(1, '#0a121a');
+      cctx.fillStyle = bg;
+      cctx.fillRect(0, 0, width, height);
+
+      const nodes = nodePosition(width, height);
+      const pulse = (Math.sin(state.connectionPulse) + 1) * 0.9;
+
+      drawLink(nodes.experiment, nodes.meaning, state.links.experimentMeaning, 'rgba(107,217,188,0.9)');
+      drawLink(nodes.meaning, nodes.memory, state.links.meaningMemory, 'rgba(127,216,255,0.9)');
+      drawLink(nodes.memory, nodes.action, state.links.memoryAction, 'rgba(255,194,110,0.9)');
+      drawLink(nodes.action, nodes.cute, state.links.actionCuteApp, 'rgba(255,159,199,0.95)');
+      drawLink(nodes.core, nodes.meaning, state.links.coreLink, 'rgba(181,255,190,0.9)');
+
+      drawNode(nodes.experiment, pulse * state.links.experimentMeaning * 0.7);
+      drawNode(nodes.meaning, pulse * state.links.meaningMemory * 0.7);
+      drawNode(nodes.memory, pulse * state.links.memoryAction * 0.7);
+      drawNode(nodes.action, pulse * state.links.memoryAction * 0.7);
+      drawNode(nodes.cute, pulse * state.links.actionCuteApp * 0.8);
+      drawNode(nodes.core, pulse * state.links.coreLink * 0.7);
+    }
+
+    function setConnectionStrength(result) {
+      const c = Math.max(0, Math.min(1, Number(result.final.confidence) || 0));
+      const modeBoost = result.reviewMode === 'confident' ? 0.16 : result.reviewMode === 'recovered' ? 0.1 : 0.06;
+
+      state.links.experimentMeaning = 0.18 + c * 0.78;
+      state.links.meaningMemory = 0.16 + c * 0.82;
+      state.links.memoryAction = 0.15 + c * 0.8;
+      state.links.actionCuteApp = stageFromSentience(state.sentience) === 'emergent'
+        ? Math.min(1, 0.25 + c * 0.7 + modeBoost)
+        : Math.min(0.55, 0.08 + c * 0.35);
+      state.links.coreLink = state.apiOnline ? (0.25 + c * 0.7) : 0.09;
+      renderConnections();
+    }
+
     async function publishEvent(name, detail) {
       if (!state.apiOnline) return;
       try {
@@ -745,6 +870,8 @@ If looping: simplify and recover</p>
         els.coreChip.className = 'chip';
         els.coreChip.textContent = 'Core offline';
       }
+      state.links.coreLink = state.apiOnline ? Math.max(0.18, state.links.coreLink) : 0.08;
+      renderConnections();
     }
 
     async function checkCore() {
@@ -767,6 +894,7 @@ If looping: simplify and recover</p>
       state.sentience = Math.max(0, Math.min(100, state.sentience + confidenceGain + modeBonus));
 
       updateNpcStage();
+      setConnectionStrength(result);
       rememberPlant(result);
       renderTrace(result.trace);
 
@@ -800,6 +928,13 @@ If looping: simplify and recover</p>
       state.plants = [];
       state.notes = [];
       state.points = [];
+      state.links = {
+        experimentMeaning: 0.12,
+        meaningMemory: 0.12,
+        memoryAction: 0.12,
+        actionCuteApp: 0.05,
+        coreLink: state.apiOnline ? 0.18 : 0.05
+      };
       els.latestBrief.textContent = 'No trials yet.';
       els.traceLog.innerHTML = '';
       els.garden.innerHTML = '';
@@ -809,6 +944,7 @@ If looping: simplify and recover</p>
       els.headline.textContent = 'Run the first trial. NPC starts procedural and uncertain.';
       updateNpcStage();
       renderBoard();
+      renderConnections();
       publishEvent('sprout_reset', 'lab reset');
     }
 
@@ -847,9 +983,15 @@ If looping: simplify and recover</p>
     els.savePetal.addEventListener('click', savePetalNote);
 
     window.addEventListener('resize', resizeCanvas);
+    function animateConnections() {
+      state.connectionPulse += 0.085;
+      renderConnections();
+      requestAnimationFrame(animateConnections);
+    }
     resizeCanvas();
     updateNpcStage();
     checkCore();
+    animateConnections();
     window.setInterval(checkCore, 6000);
   </script>
 </body>

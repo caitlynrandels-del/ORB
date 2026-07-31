@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Dict, List
 
 
@@ -9,7 +9,7 @@ from typing import Any, Dict, List
 class MemoryRecord:
     source: str
     meaning: Dict[str, Any]
-    timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
 
 class MemoryStore:

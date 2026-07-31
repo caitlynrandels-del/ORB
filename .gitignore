@@ -19,3 +19,7 @@ htmlcov/
 .DS_Store
 Thumbs.db
 .vscode/
+
+# Local workspace dumps
+codebase_dump.txt
+.tmp_*.txt
