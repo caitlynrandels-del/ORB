@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Oroboro Creative Studio</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #050816;
+      --panel: rgba(8, 14, 32, 0.94);
+      --line: rgba(111, 239, 255, 0.22);
+      --accent: #6fefff;
+      --accent2: #ff7ce5;
+      --text: #f5f8ff;
+      --muted: #92a4c7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: radial-gradient(circle at top, #162449, #050816 70%);
+      color: var(--text);
+      padding: 18px;
+    }
+    .app {
+      display: grid;
+      grid-template-columns: 260px 1fr 320px;
+      gap: 16px;
+      height: calc(100vh - 36px);
+      min-height: 740px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: 0 0 28px rgba(0,0,0,0.25);
+      overflow: hidden;
+    }
+    .toolbar, .inspector { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+    .toolbar h3, .inspector h3 { margin: 0 0 6px; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--accent); }
+    .tool-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .mode-pill { display: inline-block; padding: 4px 8px; border-radius: 999px; background: rgba(111,239,255,0.12); color: var(--accent); font-size: 0.78rem; }
+    button, .swatch, input[type="range"] { border-radius: 10px; }
+    button {
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color: white;
+      padding: 8px 10px;
+      cursor: pointer;
+    }
+    button.active {
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      color: #05101f;
+      font-weight: 700;
+    }
+    .swatch-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .swatch {
+      width: 28px; height: 28px; border: 2px solid rgba(255,255,255,0.2); cursor: pointer;
+    }
+    .swatch.active { border-color: white; transform: scale(1.08); }
+    .layer-list { display: flex; flex-direction: column; gap: 6px; }
+    .layer-pill {
+      display: flex; align-items: center; justify-content: space-between; gap: 6px;
+      padding: 8px 10px; border-radius: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+    }
+    .layer-pill.active { border-color: var(--accent); background: rgba(111,239,255,0.12); }
+    .layer-pill button { padding: 4px 8px; font-size: 0.78rem; }
+    .canvas-shell { display: flex; flex-direction: column; padding: 12px; gap: 10px; }
+    .canvas-topbar {
+      display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    }
+    .canvas-topbar .badge { color: var(--accent); font-size: 0.85rem; }
+    canvas {
+      width: 100%;
+      height: 100%;
+      background: white;
+      border-radius: 16px;
+      border: 1px solid rgba(0,0,0,0.08);
+      cursor: crosshair;
+      box-shadow: inset 0 0 32px rgba(0,0,0,0.08);
+      touch-action: none;
+    }
+    .inspector .stat, .inspector .suggestion {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 10px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .trace-list { margin: 0; padding-left: 18px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+    .trace-list strong { color: #dffcff; }
+    .small { font-size: 0.82rem; color: var(--muted); }
+    .pill { display: inline-block; padding: 4px 8px; border-radius: 999px; background: rgba(111,239,255,0.12); color: var(--accent); margin-top: 6px; }
+    .tiny { font-size: 0.75rem; color: var(--muted); }
+    .prompt-box { margin-top: 6px; font-style: italic; color: #dffcff; }
+    .nav-links { display: flex; gap: 8px; flex-wrap: wrap; }
+    .nav-links a { color: var(--accent); text-decoration: none; font-size: 0.8rem; }
+    .preset-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    .preset { padding: 7px 8px; font-size: 0.78rem; }
+    @media (max-width: 1040px) {
+      .app { grid-template-columns: 1fr; height: auto; }
+      .canvas-shell { min-height: 500px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="panel toolbar">
+      <h3>Play</h3>
+      <div class="tool-grid">
+        <button class="tool active" data-tool="brush">Paint</button>
+        <button class="tool" data-tool="eraser">Erase</button>
+        <button class="tool" data-tool="wave">Wave</button>
+        <button class="tool" data-tool="bloom">Bloom</button>
+      </div>
+      <h3>Atmosphere</h3>
+      <div id="swatches" class="swatch-row"></div>
+      <label class="small">Flow <span id="sizeValue">8</span></label>
+      <input id="sizeRange" type="range" min="1" max="48" value="8" />
+      <div class="mode-pill" id="currentMode">Calm drift</div>
+      <div class="preset-grid">
+        <button class="preset active" data-preset="calm">Calm</button>
+        <button class="preset" data-preset="bold">Bold</button>
+        <button class="preset" data-preset="dream">Dream</button>
+        <button class="preset" data-preset="editorial">Editorial</button>
+      </div>
+      <h3>Field</h3>
+      <div id="layerList" class="layer-list"></div>
+      <button id="composeBtn">Seed Atmosphere</button>
+      <button id="clearBtn">Reset Field</button>
+      <button id="undoBtn">Undo</button>
+      <button id="exportBtn">Capture</button>
+    </div>
+
+    <div class="panel canvas-shell">
+      <div class="canvas-topbar">
+        <div><strong>Oroboro Sandbox</strong></div>
+        <div class="nav-links">
+          <a href="Index.html">Main</a>
+          <a href="AIO.html">AIO</a>
+        </div>
+        <div class="badge" id="statusBadge">Listening</div>
+      </div>
+      <canvas id="canvas"></canvas>
+    </div>
+
+    <div class="panel inspector">
+      <h3>Oroboro Field</h3>
+      <div class="stat">
+        <strong>State:</strong> <span id="engineState">AWAKENING</span><br />
+        <strong>Thought:</strong> <span id="engineThought">Waiting for the first mark</span>
+      </div>
+      <div class="stat">
+        <strong>Current Mood:</strong> <span id="engineMood">curious</span>
+        <div class="pill" id="engineSuggestion">Prepare a first gesture</div>
+      </div>
+      <div class="stat">
+        <strong>Field State:</strong>
+        <div id="activeLayerName" class="small">Open terrain</div>
+      </div>
+      <div class="stat">
+        <strong>Atmosphere:</strong>
+        <div id="compositionMode" class="small">Calm drift</div>
+      </div>
+      <div class="stat">
+        <strong>Oroboro Voice:</strong>
+        <div id="assistantPrompt" class="prompt-box small">The field is listening.</div>
+      </div>
+      <div class="stat">
+        <strong>Echo:</strong>
+        <div id="partnerEcho" class="prompt-box small">Your touch invites a response.</div>
+      </div>
+      <div class="stat">
+        <strong>Trace:</strong>
+        <ul class="trace-list" id="memoryTrace"></ul>
+      </div>
+      <div class="stat">
+        <strong>Design Notes:</strong>
+        <div id="designNote" class="small">Start a stroke and let Oroboro interpret the rhythm.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const sizeRange = document.getElementById('sizeRange');
+    const sizeValue = document.getElementById('sizeValue');
+    const swatchesEl = document.getElementById('swatches');
+    const layerListEl = document.getElementById('layerList');
+    const activeLayerName = document.getElementById('activeLayerName');
+    const compositionMode = document.getElementById('compositionMode');
+    const memoryTrace = document.getElementById('memoryTrace');
+    const engineState = document.getElementById('engineState');
+    const engineThought = document.getElementById('engineThought');
+    const engineMood = document.getElementById('engineMood');
+    const engineSuggestion = document.getElementById('engineSuggestion');
+    const assistantPrompt = document.getElementById('assistantPrompt');
+    const partnerEcho = document.getElementById('partnerEcho');
+    const designNote = document.getElementById('designNote');
+    const statusBadge = document.getElementById('statusBadge');
+    const currentMode = document.getElementById('currentMode');
+    const toolButtons = Array.from(document.querySelectorAll('.tool'));
+    const presetButtons = Array.from(document.querySelectorAll('.preset'));
+
+    const colors = ['#111827', '#f43f5e', '#fb923c', '#fde047', '#22c55e', '#06b6d4', '#8b5cf6', '#ffffff'];
+    let color = '#111827';
+    let brushSize = Number(sizeRange.value);
+    let activeTool = 'brush';
+    let activePreset = 'calm';
+    let drawing = false;
+    let currentStroke = null;
+    let lastPoint = null;
+    let particleSeed = 0;
+    let particles = [];
+    let undoStack = [];
+    let layerCounter = 1;
+    let activeLayerId = 1;
+    let layers = [{ id: 1, name: 'Open terrain', visible: true, strokes: [] }];
+
+    const oroboro = {
+      state: 'AWAKENING',
+      thought: 'Waiting for the first mark',
+      mood: 'curious',
+      memory: [],
+      trace: [],
+      suggestion: 'Prepare a first gesture'
+    };
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = rect.width * ratio;
+      canvas.height = rect.height * ratio;
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      renderAll();
+    }
+
+    function renderTrace() {
+      memoryTrace.innerHTML = '';
+      const recent = oroboro.trace.slice(-5);
+      recent.forEach(entry => {
+        const li = document.createElement('li');
+        li.innerHTML = `<strong>${entry.step}:</strong> ${entry.text}`;
+        memoryTrace.appendChild(li);
+      });
+    }
+
+    function updateEngineUI() {
+      engineState.textContent = oroboro.state;
+      engineThought.textContent = oroboro.thought;
+      engineMood.textContent = oroboro.mood;
+      engineSuggestion.textContent = oroboro.suggestion;
+      statusBadge.textContent = oroboro.state === 'ACTING' || oroboro.state === 'COMPOSING' ? 'Responding' : 'Listening';
+      renderTrace();
+      updateLayerList();
+      const activeLayer = layers.find(layer => layer.id === activeLayerId);
+      if (activeLayer) activeLayerName.textContent = activeLayer.name;
+      const presetLabels = { calm: 'Calm drift', bold: 'Bold pulse', dream: 'Dreamlike drift', editorial: 'Editorial clarity' };
+      compositionMode.textContent = presetLabels[activePreset] || 'Calm drift';
+      currentMode.textContent = presetLabels[activePreset] || 'Calm drift';
+      assistantPrompt.textContent = oroboro.suggestion;
+      partnerEcho.textContent = oroboro.suggestion;
+      designNote.textContent = oroboro.suggestion;
+    }
+
+    function perceive(event) {
+      return { type: event.type, tool: activeTool, size: brushSize, color };
+    }
+
+    function interpret(signal) {
+      if (signal.tool === 'brush') return 'sketching';
+      if (signal.tool === 'eraser') return 'erasing';
+      if (signal.tool === 'wave') return 'flowing';
+      if (signal.tool === 'bloom') return 'blooming';
+      return 'observing';
+    }
+
+    function connect(intent) {
+      if (intent === 'sketching') return 'rhythm';
+      if (intent === 'erasing') return 'clarity';
+      if (intent === 'flowing') return 'current';
+      if (intent === 'blooming') return 'bloom';
+      return 'focus';
+    }
+
+    function updateEngine(intent, signal) {
+      oroboro.state = 'ATTENDING';
+      oroboro.thought = `The gesture is becoming ${intent}`;
+      oroboro.mood = intent === 'sketching' ? 'curious' : intent === 'erasing' ? 'clarifying' : intent === 'flowing' ? 'drifting' : intent === 'blooming' ? 'radiant' : 'attentive';
+      oroboro.memory.push(`${intent} with ${signal.tool}`);
+      if (oroboro.memory.length > 8) oroboro.memory.shift();
+      const relation = connect(intent);
+      oroboro.trace.push({ step: 'PERCEIVE', text: `A ${signal.tool} gesture arrived` });
+      oroboro.trace.push({ step: 'INTERPRET', text: `Intent identified as ${intent}` });
+      oroboro.trace.push({ step: 'CONNECT', text: `Connected to ${relation}` });
+      oroboro.trace.push({ step: 'UPDATE', text: `Mood set to ${oroboro.mood}` });
+      if (signal.size > 20) {
+        oroboro.suggestion = 'The field opens wider when the gesture is softer.';
+      } else if (intent === 'flowing') {
+        oroboro.suggestion = 'A current is forming; let it carry the scene.';
+      } else if (intent === 'erasing') {
+        oroboro.suggestion = 'The atmosphere becomes clearer when the noise is removed.';
+      } else if (intent === 'blooming') {
+        oroboro.suggestion = 'A bloom is beginning; let it spread gently.';
+      } else {
+        oroboro.suggestion = 'The rhythm is alive; let the gesture breathe.';
+      }
+      oroboro.trace.push({ step: 'ACT', text: oroboro.suggestion });
+      oroboro.trace.push({ step: 'REFLECT', text: 'The work now carries a trace of intention' });
+      if (oroboro.trace.length > 12) oroboro.trace = oroboro.trace.slice(-12);
+      updateEngineUI();
+    }
+
+    function setTool(tool) {
+      activeTool = tool;
+      toolButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.tool === tool));
+      const signal = perceive({ type: 'tool-switch' });
+      updateEngine(interpret(signal), signal);
+    }
+
+    function getActiveLayer() {
+      return layers.find(layer => layer.id === activeLayerId);
+    }
+
+    function updateLayerList() {
+      layerListEl.innerHTML = '';
+      layers.forEach(layer => {
+        const row = document.createElement('div');
+        row.className = `layer-pill${layer.id === activeLayerId ? ' active' : ''}`;
+        const label = document.createElement('button');
+        label.textContent = layer.name;
+        label.addEventListener('click', () => {
+          activeLayerId = layer.id;
+          oroboro.state = 'FOCUSING';
+          oroboro.thought = `The active layer is now ${layer.name}`;
+          oroboro.suggestion = `Working on ${layer.name} with intent.`;
+          updateEngineUI();
+        });
+        const toggle = document.createElement('button');
+        toggle.textContent = layer.visible ? 'V' : '•';
+        toggle.title = layer.visible ? 'Hide layer' : 'Show layer';
+        toggle.addEventListener('click', () => {
+          layer.visible = !layer.visible;
+          oroboro.suggestion = layer.visible ? 'The layer is now visible again.' : 'The layer is held in silence.';
+          renderAll();
+          updateEngineUI();
+        });
+        row.appendChild(label);
+        row.appendChild(toggle);
+        layerListEl.appendChild(row);
+      });
+    }
+
+    function getPresetStyle(presetName = activePreset) {
+      const presetMap = {
+        calm: { label: 'Calm', prompt: 'A quiet composition with breathing room and a clear center.', accent: 'rgba(6,182,212,0.25)' },
+        bold: { label: 'Bold', prompt: 'A high-contrast composition with strong shape and momentum.', accent: 'rgba(244,63,94,0.25)' },
+        dream: { label: 'Dream', prompt: 'A drifting composition that invites atmosphere and softness.', accent: 'rgba(139,92,246,0.25)' },
+        editorial: { label: 'Editorial', prompt: 'A structured composition with clarity, hierarchy, and intent.', accent: 'rgba(253,224,71,0.25)' }
+      };
+      return presetMap[presetName] || presetMap.calm;
+    }
+
+    function renderShape(stroke) {
+      ctx.save();
+      ctx.strokeStyle = stroke.color;
+      ctx.fillStyle = stroke.color;
+      ctx.lineWidth = stroke.size;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      if (stroke.type === 'wave') {
+        const dx = stroke.end.x - stroke.start.x;
+        const dy = stroke.end.y - stroke.start.y;
+        const steps = 24;
+        ctx.beginPath();
+        ctx.moveTo(stroke.start.x, stroke.start.y);
+        for (let i = 1; i <= steps; i += 1) {
+          const t = i / steps;
+          const x = stroke.start.x + dx * t;
+          const y = stroke.start.y + dy * t + Math.sin(t * Math.PI * 2) * Math.max(8, stroke.size * 1.4);
+          ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      } else if (stroke.type === 'bloom') {
+        const radius = Math.max(20, Math.abs(stroke.end.x - stroke.start.x) + Math.abs(stroke.end.y - stroke.start.y));
+        ctx.beginPath();
+        ctx.arc(stroke.start.x, stroke.start.y, radius / 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 0.35;
+        ctx.beginPath();
+        ctx.arc(stroke.start.x, stroke.start.y, radius / 2, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(stroke.start.x, stroke.start.y, radius, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (stroke.type === 'line') {
+        ctx.beginPath();
+        ctx.moveTo(stroke.start.x, stroke.start.y);
+        ctx.lineTo(stroke.end.x, stroke.end.y);
+        ctx.stroke();
+      } else if (stroke.type === 'rect') {
+        ctx.beginPath();
+        ctx.rect(stroke.start.x, stroke.start.y, stroke.end.x - stroke.start.x, stroke.end.y - stroke.start.y);
+        ctx.stroke();
+      } else if (stroke.type === 'circle') {
+        const radiusX = (stroke.end.x - stroke.start.x) / 2;
+        const radiusY = (stroke.end.y - stroke.start.y) / 2;
+        const cx = (stroke.start.x + stroke.end.x) / 2;
+        const cy = (stroke.start.y + stroke.end.y) / 2;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, Math.abs(radiusX), Math.abs(radiusY), 0, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (stroke.type === 'fill') {
+        ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+      } else if (stroke.type === 'text') {
+        ctx.font = `${Math.max(14, stroke.size * 2)}px Segoe UI`;
+        ctx.fillText(stroke.text, stroke.start.x, stroke.start.y);
+      } else if (stroke.type === 'echo') {
+        ctx.strokeStyle = stroke.color;
+        ctx.lineWidth = stroke.size;
+        ctx.globalAlpha = 0.8;
+        if (stroke.kind === 'line') {
+          ctx.beginPath();
+          ctx.moveTo(stroke.start.x, stroke.start.y);
+          ctx.lineTo(stroke.end.x, stroke.end.y);
+          ctx.stroke();
+        } else if (stroke.kind === 'arc') {
+          const cx = (stroke.start.x + stroke.end.x) / 2;
+          const cy = (stroke.start.y + stroke.end.y) / 2;
+          const radius = Math.max(12, Math.abs(stroke.end.x - stroke.start.x) / 2);
+          ctx.beginPath();
+          ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+          ctx.stroke();
+        } else {
+          ctx.beginPath();
+          ctx.moveTo(stroke.start.x, stroke.start.y);
+          ctx.lineTo(stroke.end.x, stroke.end.y);
+          ctx.moveTo(stroke.start.x + 10, stroke.start.y - 10);
+          ctx.lineTo(stroke.end.x - 10, stroke.end.y + 10);
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+    }
+
+    function renderStroke(stroke) {
+      ctx.save();
+      ctx.strokeStyle = stroke.color;
+      ctx.fillStyle = stroke.color;
+      ctx.lineWidth = stroke.size;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.globalCompositeOperation = stroke.type === 'eraser' ? 'destination-out' : 'source-over';
+      if (stroke.type === 'brush' || stroke.type === 'eraser') {
+        if (stroke.points.length > 1) {
+          ctx.beginPath();
+          ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+          stroke.points.slice(1).forEach(point => ctx.lineTo(point.x, point.y));
+          ctx.stroke();
+        } else if (stroke.points.length === 1) {
+          ctx.beginPath();
+          ctx.arc(stroke.points[0].x, stroke.points[0].y, stroke.size / 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else {
+        renderShape(stroke);
+      }
+      ctx.restore();
+    }
+
+    function renderAll() {
+      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+      ctx.save();
+      const grad = ctx.createLinearGradient(0, 0, 0, canvas.clientHeight);
+      grad.addColorStop(0, '#07111d');
+      grad.addColorStop(1, '#14263f');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= canvas.clientWidth; x += 48) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.clientHeight);
+        ctx.stroke();
+      }
+      for (let y = 0; y <= canvas.clientHeight; y += 48) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.clientWidth, y);
+        ctx.stroke();
+      }
+      ctx.restore();
+      layers.forEach(layer => {
+        if (!layer.visible) return;
+        layer.strokes.forEach(stroke => renderStroke(stroke));
+      });
+      particles.forEach(p => {
+        ctx.beginPath();
+        ctx.fillStyle = p.color;
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      if (currentStroke) {
+        renderStroke(currentStroke);
+      }
+    }
+
+    function pushStroke(stroke) {
+      const activeLayer = getActiveLayer();
+      if (activeLayer) {
+        activeLayer.strokes.push(stroke);
+        undoStack.push({ layerId: activeLayer.id, stroke });
+      } else {
+        undoStack.push({ layerId: 1, stroke });
+      }
+      if (undoStack.length > 60) undoStack.shift();
+      renderAll();
+      updateEngineUI();
+    }
+
+    function clearCanvas() {
+      layers = layers.map(layer => ({ ...layer, strokes: [] }));
+      undoStack = [];
+      particles = [];
+      currentStroke = null;
+      renderAll();
+      oroboro.state = 'REFLECTING';
+      oroboro.thought = 'The field is reset for a new passage';
+      oroboro.suggestion = 'A clean field invites a fresh beginning';
+      updateEngineUI();
+    }
+
+    function undo() {
+      const last = undoStack.pop();
+      if (!last) return;
+      const layer = layers.find(item => item.id === last.layerId);
+      if (layer && layer.strokes.length) {
+        layer.strokes.pop();
+      }
+      renderAll();
+      oroboro.suggestion = 'A previous gesture has been recalled';
+      updateEngineUI();
+    }
+
+    function seedParticles() {
+      particleSeed += 1;
+      const count = 40 + particleSeed % 10;
+      for (let i = 0; i < count; i += 1) {
+        particles.push({
+          x: Math.random() * canvas.clientWidth,
+          y: Math.random() * canvas.clientHeight,
+          size: 1 + Math.random() * 3,
+          vx: (Math.random() - 0.5) * 0.4,
+          vy: (Math.random() - 0.5) * 0.4,
+          color: i % 2 ? 'rgba(111,239,255,0.65)' : 'rgba(255,124,229,0.55)'
+        });
+      }
+      if (particles.length > 300) particles = particles.slice(-300);
+      renderAll();
+    }
+
+    function animateParticles() {
+      particles = particles.map(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vx *= 0.99;
+        p.vy *= 0.99;
+        return p;
+      }).filter(p => p.x > -10 && p.x < canvas.clientWidth + 10 && p.y > -10 && p.y < canvas.clientHeight + 10);
+      renderAll();
+      requestAnimationFrame(animateParticles);
+    }
+
+    function setPreset(presetName) {
+      activePreset = presetName;
+      presetButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.preset === presetName));
+      const preset = getPresetStyle(presetName);
+      oroboro.state = 'COMPOSING';
+      oroboro.thought = `The system is shaping a ${preset.label.toLowerCase()} composition`;
+      oroboro.suggestion = preset.prompt;
+      updateEngineUI();
+    }
+
+    function compose() {
+      const preset = getPresetStyle(activePreset);
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      ctx.save();
+      ctx.strokeStyle = preset.accent;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([8, 8]);
+      ctx.strokeRect(40, 40, w - 80, h - 80);
+      if (activePreset === 'bold') {
+        ctx.beginPath();
+        ctx.moveTo(60, h - 60);
+        ctx.lineTo(w - 60, 60);
+        ctx.stroke();
+      } else if (activePreset === 'dream') {
+        ctx.beginPath();
+        ctx.arc(w / 2, h / 2, Math.min(w, h) * 0.18, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (activePreset === 'editorial') {
+        ctx.beginPath();
+        ctx.moveTo(60, 120);
+        ctx.lineTo(w - 60, 120);
+        ctx.moveTo(60, h - 120);
+        ctx.lineTo(w - 60, h - 120);
+        ctx.stroke();
+      }
+      ctx.restore();
+      seedParticles();
+      oroboro.state = 'COMPOSING';
+      oroboro.thought = `The field is shaping a ${preset.label.toLowerCase()} atmosphere`;
+      oroboro.suggestion = preset.prompt;
+      updateEngineUI();
+    }
+
+    function respondToGesture(stroke) {
+      const preset = getPresetStyle(activePreset);
+      const anchor = stroke.points && stroke.points.length
+        ? stroke.points[Math.floor(stroke.points.length / 2)]
+        : stroke.end || stroke.start || { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 };
+      let echoStroke;
+      if (stroke.type === 'brush' || stroke.type === 'eraser') {
+        echoStroke = {
+          type: 'echo',
+          color: preset.accent,
+          size: Math.max(2, Math.min(14, brushSize / 3)),
+          start: { x: anchor.x + 10, y: anchor.y - 10 },
+          end: { x: anchor.x + 34, y: anchor.y + 10 },
+          kind: 'line'
+        };
+      } else if (stroke.type === 'wave') {
+        echoStroke = {
+          type: 'echo',
+          color: preset.accent,
+          size: 2,
+          start: { x: anchor.x - 20, y: anchor.y },
+          end: { x: anchor.x + 20, y: anchor.y },
+          kind: 'line'
+        };
+      } else {
+        echoStroke = {
+          type: 'echo',
+          color: preset.accent,
+          size: 2,
+          start: { x: anchor.x - 12, y: anchor.y - 12 },
+          end: { x: anchor.x + 12, y: anchor.y + 12 },
+          kind: 'cross'
+        };
+      }
+      pushStroke(echoStroke);
+      seedParticles();
+      oroboro.state = 'RESPONDING';
+      oroboro.thought = 'The field is echoing your touch';
+      oroboro.suggestion = `Oroboro answered your ${stroke.type} gesture with a ${preset.label.toLowerCase()} echo.`;
+      oroboro.trace.push({ step: 'RESPONSE', text: 'Added a collaborative echo to the field' });
+      if (oroboro.trace.length > 12) oroboro.trace = oroboro.trace.slice(-12);
+      updateEngineUI();
+    }
+
+    function exportCanvas() {
+      const link = document.createElement('a');
+      link.download = 'oro-studio-export.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      oroboro.state = 'EXPORTING';
+      oroboro.thought = 'The composition is being carried outward';
+      oroboro.suggestion = 'The work is ready to be shared.';
+      updateEngineUI();
+    }
+
+    function addLayer() {
+      layerCounter += 1;
+      const newLayer = { id: layerCounter, name: `Layer ${layerCounter}`, visible: true, strokes: [] };
+      layers.push(newLayer);
+      activeLayerId = newLayer.id;
+      oroboro.state = 'BUILDING';
+      oroboro.thought = 'A new layer has been born';
+      oroboro.suggestion = 'More depth has entered the composition.';
+      updateEngineUI();
+    }
+
+    function deleteLayer() {
+      if (layers.length <= 1) return;
+      const layerIndex = layers.findIndex(layer => layer.id === activeLayerId);
+      if (layerIndex < 0) return;
+      layers.splice(layerIndex, 1);
+      activeLayerId = layers[Math.max(0, layerIndex - 1)].id;
+      oroboro.state = 'EDITING';
+      oroboro.thought = 'A layer has been released';
+      oroboro.suggestion = 'The composition has been simplified.';
+      renderAll();
+      updateEngineUI();
+    }
+
+    function getPoint(event) {
+      const rect = canvas.getBoundingClientRect();
+      return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+    }
+
+    canvas.addEventListener('pointerdown', (event) => {
+      drawing = true;
+      const point = getPoint(event);
+      lastPoint = point;
+      const signal = perceive({ type: 'start', tool: activeTool, size: brushSize, color });
+      updateEngine(interpret(signal), signal);
+      if (activeTool === 'wave') {
+        currentStroke = { type: 'wave', color, size: brushSize, start: point, end: point };
+      } else if (activeTool === 'bloom') {
+        currentStroke = { type: 'bloom', color, size: brushSize, start: point, end: point };
+      } else {
+        currentStroke = activeTool === 'brush' || activeTool === 'eraser'
+          ? { type: activeTool, color, size: brushSize, points: [point] }
+          : { type: activeTool, color, size: brushSize, start: point, end: point };
+      }
+      canvas.setPointerCapture(event.pointerId);
+      renderAll();
+    });
+
+    canvas.addEventListener('pointermove', (event) => {
+      if (!drawing) return;
+      const point = getPoint(event);
+      if (currentStroke && (activeTool === 'brush' || activeTool === 'eraser')) {
+        currentStroke.points.push(point);
+      } else if (currentStroke) {
+        currentStroke.end = point;
+      }
+      renderAll();
+      lastPoint = point;
+    });
+
+    canvas.addEventListener('pointerup', () => {
+      if (currentStroke && currentStroke.type !== 'fill') {
+        pushStroke(currentStroke);
+        respondToGesture(currentStroke);
+      }
+      drawing = false;
+      currentStroke = null;
+      const signal = perceive({ type: 'end' });
+      updateEngine(interpret(signal), signal);
+    });
+
+    sizeRange.addEventListener('input', () => {
+      brushSize = Number(sizeRange.value);
+      sizeValue.textContent = brushSize;
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', clearCanvas);
+    document.getElementById('undoBtn').addEventListener('click', undo);
+    document.getElementById('composeBtn').addEventListener('click', compose);
+    document.getElementById('exportBtn').addEventListener('click', exportCanvas);
+
+    toolButtons.forEach(btn => btn.addEventListener('click', () => setTool(btn.dataset.tool)));
+    presetButtons.forEach(btn => btn.addEventListener('click', () => setPreset(btn.dataset.preset)));
+
+    colors.forEach(colorValue => {
+      const swatch = document.createElement('button');
+      swatch.className = 'swatch';
+      swatch.style.background = colorValue;
+      swatch.addEventListener('click', () => {
+        color = colorValue;
+        document.querySelectorAll('.swatch').forEach(el => el.classList.toggle('active', el === swatch));
+      });
+      swatchesEl.appendChild(swatch);
+    });
+    document.querySelector('.swatch').classList.add('active');
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    seedParticles();
+    animateParticles();
+    updateEngineUI();
+  </script>
+</body>
+</html>

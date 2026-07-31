@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ORB Logico - The Threshold</title>
+    <style>
+        :root {
+            color-scheme: dark;
+        }
+        body {
+            margin: 0;
+            background: radial-gradient(circle at top, #1f2945 0%, #090b14 70%, #04050a 100%);
+            color: #eef7ff;
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #shell {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 16px;
+            box-sizing: border-box;
+            gap: 12px;
+        }
+        #hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(5, 10, 22, 0.8);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-size: 13px;
+            box-shadow: 0 0 18px rgba(0, 255, 255, 0.15);
+        }
+        #hud strong { color: #6fefff; }
+        #game-area {
+            display: flex;
+            flex: 1;
+            gap: 12px;
+            min-height: 0;
+        }
+        #game-container {
+            position: relative;
+            flex: 1;
+            border: 2px solid rgba(0, 255, 255, 0.36);
+            border-radius: 16px;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #14213d 0%, #09111f 100%);
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.35), 0 0 20px rgba(0, 255, 255, 0.18);
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #14213d 0%, #09111f 100%);
+        }
+        #side-panel {
+            width: 290px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .panel {
+            background: rgba(6, 12, 24, 0.84);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 12px;
+            padding: 10px 12px;
+            box-shadow: 0 0 14px rgba(0,0,0,0.2);
+        }
+        .panel h3 {
+            margin: 0 0 8px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: #6fefff;
+        }
+        .panel p, .panel li {
+            margin: 4px 0;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        .pill {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: rgba(0, 255, 255, 0.18);
+            color: #86f5ff;
+            margin-right: 4px;
+            margin-top: 4px;
+            font-size: 11px;
+        }
+        #settings {
+            display: none;
+            position: absolute;
+            inset: 18px;
+            background: rgba(4, 8, 18, 0.94);
+            border: 1px solid rgba(0,255,255,0.3);
+            border-radius: 14px;
+            padding: 16px;
+            z-index: 4;
+        }
+        #settings.open { display: block; }
+        button, .keybox {
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.08);
+            color: white;
+            border-radius: 8px;
+            padding: 6px 8px;
+            cursor: pointer;
+        }
+        .keybox { display: inline-block; margin: 2px; min-width: 90px; text-align: center; }
+        #feedback {
+            position: absolute;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 12px;
+            background: rgba(7, 16, 32, 0.85);
+            border: 1px solid rgba(111, 239, 255, 0.35);
+            border-radius: 999px;
+            color: #6fefff;
+            font-size: 12px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 3;
+        }
+        #feedback.show { opacity: 1; }
+        #footer-note { font-size: 12px; color: #8edfff; }
+        .link-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+        .link-pill {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: rgba(0, 255, 255, 0.15);
+            color: #88f5ff;
+            text-decoration: none;
+            border: 1px solid rgba(0, 255, 255, 0.25);
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <div id="shell">
+        <div id="hud">
+            <div><strong>ORB</strong> — The Threshold</div>
+            <div>Thought: <span id="thought">Listening to the world</span></div>
+            <div>State: <span id="state">AWAKENING</span></div>
+        </div>
+
+        <div id="game-area">
+            <div id="game-container">
+                <canvas id="gameCanvas" width="960" height="540"></canvas>
+                <div id="feedback"></div>
+                <div id="settings">
+                    <h3>Controls</h3>
+                    <div id="binding-list"></div>
+                    <br>
+                    <button id="close-settings">Close</button>
+                </div>
+            </div>
+
+            <div id="side-panel">
+                <div class="panel">
+                    <h3>Oroboro Status</h3>
+                    <p><strong>Location:</strong> <span id="location">The Threshold</span></p>
+                    <p><strong>Memory:</strong> <span id="memory-count">0</span></p>
+                    <p><strong>Discovered:</strong> <span id="discovered-count">0</span></p>
+                    <p><strong>Current thought:</strong> <span id="thought-panel">Listening to the world</span></p>
+                </div>
+                <div class="panel">
+                    <h3>Inventory</h3>
+                    <div id="inventory"></div>
+                </div>
+                <div class="panel">
+                    <h3>Discovery Log</h3>
+                    <ul id="log"></ul>
+                </div>
+                <div id="footer-note">Move with WASD, use Space to interact, press M for settings.</div>
+                <div class="link-row">
+                    <a class="link-pill" href="CreativeStudio.html">Open Creative Studio</a>
+                    <a class="link-pill" href="AIO.html">Open AIO</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="oroboro/config.js"></script>
+    <script src="oroboro/brain.js"></script>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const mind = new OroboroMind();
+        const controls = loadControls();
+
+        const ui = {
+            thought: document.getElementById('thought'),
+            state: document.getElementById('state'),
+            location: document.getElementById('location'),
+            memoryCount: document.getElementById('memory-count'),
+            discoveredCount: document.getElementById('discovered-count'),
+            thoughtPanel: document.getElementById('thought-panel'),
+            inventory: document.getElementById('inventory'),
+            log: document.getElementById('log'),
+            bindingList: document.getElementById('binding-list'),
+            settings: document.getElementById('settings'),
+            feedback: document.getElementById('feedback')
+        };
+
+        const world = {
+            width: 2200,
+            height: 1400,
+            cameraX: 0,
+            cameraY: 0,
+            objects: []
+        };
+
+        const player = {
+            x: 500,
+            y: 500,
+            radius: 16,
+            speed: 3.2,
+            facing: 'down',
+            frame: 0,
+            inventory: [],
+            color: '#51f0ff',
+            moveTimer: 0
+        };
+
+        const keys = {};
+        const particles = [];
+        const logEntries = [];
+        let rebinding = null;
+        let feedbackText = '';
+        let feedbackTimer = 0;
+
+        function addLog(text) {
+            logEntries.unshift(text);
+            if (logEntries.length > 8) logEntries.length = 8;
+            renderLog();
+        }
+
+        function renderLog() {
+            ui.log.innerHTML = '';
+            logEntries.forEach(entry => {
+                const li = document.createElement('li');
+                li.textContent = entry;
+                ui.log.appendChild(li);
+            });
+        }
+
+        function showFeedback(text) {
+            feedbackText = text;
+            feedbackTimer = 90;
+            ui.feedback.textContent = text;
+            ui.feedback.classList.add('show');
+        }
+
+        function playTone(freq, duration = 0.08) {
+            try {
+                const ctxAudio = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctxAudio.createOscillator();
+                const gain = ctxAudio.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                gain.gain.value = 0.03;
+                osc.connect(gain);
+                gain.connect(ctxAudio.destination);
+                osc.start();
+                gain.gain.exponentialRampToValueAtTime(0.0001, ctxAudio.currentTime + duration);
+                osc.stop(ctxAudio.currentTime + duration);
+                ctxAudio.close();
+            } catch (e) {}
+        }
+
+        function updateHud() {
+            ui.thought.textContent = mind.currentThought;
+            ui.state.textContent = mind.state;
+            ui.location.textContent = mind.location;
+            ui.memoryCount.textContent = mind.memory.length;
+            ui.discoveredCount.textContent = mind.discoveredObjects.size;
+            ui.thoughtPanel.textContent = mind.currentThought;
+            ui.inventory.innerHTML = player.inventory.length ? player.inventory.map(item => `<span class="pill">${item}</span>`).join('') : '<p>Nothing yet</p>';
+        }
+
+        function addObject(type, x, y, detail, requires = null) {
+            world.objects.push({ id: `${type}-${world.objects.length}`, type, x, y, detail, requires, discovered: false, active: true, glow: 0 });
+        }
+
+        function buildWorld() {
+            world.objects = [];
+            for (let i = 0; i < 18; i++) {
+                addObject('tree', 180 + i * 110, 180 + (i % 3) * 90, 'A sentinel tree');
+            }
+            addObject('artifact', 740, 320, 'Ancient lens', null);
+            addObject('door', 1510, 720, 'A sealed gate', 'artifact');
+            addObject('mystery', 1180, 980, 'A humming stone', null);
+            addObject('shrine', 1850, 1100, 'A shrine of memory', null);
+            addObject('tree', 1300, 260, 'A twisted cedar');
+            addObject('tree', 700, 1040, 'A winding pine');
+            addObject('rock', 1600, 360, 'A weathered boulder');
+            addObject('river', 980, 1200, 'A silver stream');
+            for (let i = 0; i < 7; i++) {
+                addObject('spark', 300 + i * 180, 700 + (i % 2) * 100, 'A faint ember', null);
+            }
+        }
+
+        function drawWorld() {
+            const cx = world.cameraX;
+            const cy = world.cameraY;
+            ctx.save();
+            ctx.translate(-cx, -cy);
+            ctx.fillStyle = '#0f1729';
+            ctx.fillRect(0, 0, world.width, world.height);
+
+            const bg = ctx.createLinearGradient(0, 0, 0, world.height);
+            bg.addColorStop(0, '#17314d');
+            bg.addColorStop(1, '#07111d');
+            ctx.fillStyle = bg;
+            ctx.fillRect(0, 0, world.width, world.height);
+
+            for (let y = 0; y <= world.height; y += 180) {
+                ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(world.width, y);
+                ctx.stroke();
+            }
+            for (let x = 0; x <= world.width; x += 180) {
+                ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, world.height);
+                ctx.stroke();
+            }
+
+            world.objects.forEach(obj => {
+                if (!obj.active) return;
+                const glow = 0.25 + Math.sin(obj.glow) * 0.1;
+                ctx.globalAlpha = 0.95;
+                if (obj.type === 'tree') {
+                    ctx.fillStyle = '#3f7d20';
+                    ctx.fillRect(obj.x - 18, obj.y - 44, 36, 44);
+                    ctx.beginPath();
+                    ctx.arc(obj.x, obj.y - 44, 28, 0, Math.PI * 2);
+                    ctx.fillStyle = '#5ebd34';
+                    ctx.fill();
+                } else if (obj.type === 'artifact') {
+                    ctx.fillStyle = '#ffce4b';
+                    ctx.beginPath();
+                    ctx.arc(obj.x, obj.y, 18, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#a06dff';
+                    ctx.fillRect(obj.x - 6, obj.y - 22, 12, 24);
+                } else if (obj.type === 'door') {
+                    ctx.fillStyle = '#8b7cff';
+                    ctx.fillRect(obj.x - 28, obj.y - 46, 56, 92);
+                    ctx.fillStyle = '#2c2556';
+                    ctx.fillRect(obj.x - 16, obj.y - 30, 32, 60);
+                } else if (obj.type === 'mystery') {
+                    ctx.fillStyle = '#ff5cc8';
+                    ctx.beginPath();
+                    ctx.arc(obj.x, obj.y, 20, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (obj.type === 'shrine') {
+                    ctx.fillStyle = '#7ee7ff';
+                    ctx.fillRect(obj.x - 24, obj.y - 34, 48, 68);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(obj.x - 8, obj.y - 22, 16, 36);
+                } else if (obj.type === 'rock') {
+                    ctx.fillStyle = '#7a7f8c';
+                    ctx.beginPath();
+                    ctx.moveTo(obj.x - 24, obj.y + 12);
+                    ctx.lineTo(obj.x - 8, obj.y - 20);
+                    ctx.lineTo(obj.x + 16, obj.y - 16);
+                    ctx.lineTo(obj.x + 24, obj.y + 8);
+                    ctx.lineTo(obj.x + 4, obj.y + 24);
+                    ctx.closePath();
+                    ctx.fill();
+                } else if (obj.type === 'river') {
+                    ctx.fillStyle = '#3bc2ff';
+                    ctx.fillRect(obj.x - 120, obj.y - 18, 240, 36);
+                } else if (obj.type === 'spark') {
+                    ctx.fillStyle = `rgba(255, 220, 120, ${0.6 + glow})`;
+                    ctx.beginPath();
+                    ctx.arc(obj.x, obj.y, 8 + glow * 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                if (obj.discovered) {
+                    ctx.strokeStyle = '#6fefff';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(obj.x, obj.y, 28 + Math.sin(obj.glow) * 2, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            });
+
+            ctx.restore();
+        }
+
+        function drawPlayer() {
+            const bob = Math.sin(player.frame) * 2;
+            const px = player.x - world.cameraX;
+            const py = player.y - world.cameraY + (player.moving ? bob : 0);
+            ctx.save();
+            ctx.translate(px, py);
+            ctx.fillStyle = '#4fe5ff';
+            ctx.beginPath();
+            ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#09111f';
+            ctx.fillRect(-8, -10, 16, 18);
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(-2, -14, 4, 8);
+            ctx.fillStyle = '#ff7d48';
+            if (player.facing === 'up') {
+                ctx.fillRect(-5, -6, 10, 10);
+            } else if (player.facing === 'down') {
+                ctx.fillRect(-5, 8, 10, 10);
+            } else if (player.facing === 'left') {
+                ctx.fillRect(-14, -4, 10, 8);
+            } else {
+                ctx.fillRect(4, -4, 10, 8);
+            }
+            ctx.restore();
+        }
+
+        function drawParticles() {
+            particles.forEach((p, i) => {
+                p.life--;
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.life <= 0) particles.splice(i, 1);
+            });
+            particles.forEach(p => {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, p.life / 20);
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x - world.cameraX, p.y - world.cameraY, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+        }
+
+        function spawnParticles(x, y, color) {
+            for (let i = 0; i < 8; i++) {
+                particles.push({ x, y, vx: (Math.random() - 0.5) * 3, vy: (Math.random() - 0.5) * 3, life: 20, size: 2 + Math.random() * 3, color });
+            }
+        }
+
+        function interactWithObject() {
+            const candidates = world.objects.filter(obj => {
+                const dx = player.x - obj.x;
+                const dy = player.y - obj.y;
+                return obj.active && Math.hypot(dx, dy) < 70;
+            });
+            if (!candidates.length) {
+                addLog('The air hums with unclaimed possibility.');
+                return;
+            }
+            const obj = candidates[0];
+            const event = mind.perceive({ kind: 'interaction', detail: obj.type });
+            const meaning = mind.interpret(event);
+            mind.remember(meaning);
+            if (obj.type === 'artifact') {
+                if (!player.inventory.includes('Lens Fragment')) player.inventory.push('Lens Fragment');
+                obj.discovered = true;
+                mind.updateState({ thought: 'A memory node forms around the artifact.', location: 'The Lantern Grove', state: 'DISCOVERING', objectId: obj.id });
+                mind.connect('player', obj.id, 'found');
+                spawnParticles(obj.x, obj.y, '#ffd166');
+                playTone(720);
+                showFeedback('Artifact discovered');
+                addLog('Ancient artifact discovered. Oroboro stores a memory node.');
+            } else if (obj.type === 'tree') {
+                obj.discovered = true;
+                mind.updateState({ thought: 'The tree speaks in weather and roots.', location: 'The Rooted Wood', state: 'READING', objectId: obj.id });
+                mind.connect('player', obj.id, 'observed');
+                spawnParticles(obj.x, obj.y, '#83ff8d');
+                playTone(520);
+                showFeedback('Tree read');
+                addLog('Tree identified. Environment data logged.');
+            } else if (obj.type === 'door') {
+                if (player.inventory.includes('Lens Fragment')) {
+                    obj.discovered = true;
+                    mind.updateState({ thought: 'The gate opens under recognition.', location: 'The Sealed Gate', state: 'OPENING', objectId: obj.id });
+                    playTone(880);
+                    showFeedback('Gate opened');
+                    addLog('Door opened after the discovery condition was met.');
+                } else {
+                    mind.updateState({ thought: 'The door demands a prior discovery.', location: 'The Sealed Gate', state: 'BLOCKED' });
+                    playTone(220);
+                    showFeedback('Door remains sealed');
+                    addLog('The door remains sealed. Something else must be found first.');
+                }
+            } else if (obj.type === 'mystery') {
+                obj.discovered = true;
+                mind.updateState({ thought: 'A mystery state blooms in the mind.', location: 'The Humming Hollow', state: 'MYSTERY', objectId: obj.id });
+                spawnParticles(obj.x, obj.y, '#ff7ce5');
+                playTone(620);
+                showFeedback('Mystery discovered');
+                addLog('Unknown object resolved into a mystery state.');
+            } else if (obj.type === 'shrine') {
+                obj.discovered = true;
+                mind.updateState({ thought: 'Memory returns as a sacred pulse.', location: 'The Memory Shrine', state: 'REVERENT', objectId: obj.id });
+                spawnParticles(obj.x, obj.y, '#7fe7ff');
+                playTone(980);
+                showFeedback('Shrine activated');
+                addLog('Shrine activated. Memory and reflection deepen.');
+            } else {
+                obj.discovered = true;
+                mind.updateState({ thought: 'A small sign of meaning appears.', location: mind.location, state: 'NOTING', objectId: obj.id });
+                addLog('Object noted by the Oroboro loop.');
+            }
+            mind.act({ effect: mind.currentThought });
+            mind.reflect();
+            updateHud();
+        }
+
+        function bindingLabel(action) {
+            return {
+                up: 'Up',
+                down: 'Down',
+                left: 'Left',
+                right: 'Right',
+                interact: 'Interact',
+                menu: 'Menu'
+            }[action] || action;
+        }
+
+        function startRebinding(action) {
+            rebinding = action;
+            showFeedback(`Press a key for ${bindingLabel(action)}`);
+            renderBindings();
+        }
+
+        function setBinding(action, code) {
+            controls[action] = code;
+            saveControls(controls);
+            renderBindings();
+        }
+
+        function handleMovement() {
+            const moveX = (keys[controls.right] ? 1 : 0) - (keys[controls.left] ? 1 : 0);
+            const moveY = (keys[controls.down] ? 1 : 0) - (keys[controls.up] ? 1 : 0);
+            const horizontal = moveX !== 0 || moveY !== 0;
+            player.moving = horizontal;
+            if (horizontal) {
+                const len = Math.hypot(moveX, moveY) || 1;
+                const vx = (moveX / len) * player.speed;
+                const vy = (moveY / len) * player.speed;
+                const nextX = player.x + vx;
+                const nextY = player.y + vy;
+                const collides = world.objects.some(obj => obj.type === 'rock' && Math.hypot(nextX - obj.x, nextY - obj.y) < 44);
+                if (!collides) {
+                    player.x = nextX;
+                    player.y = nextY;
+                }
+                player.frame += 0.25;
+                mind.perceive({ kind: 'move', detail: 'walking' });
+                mind.interpret({ kind: 'move', detail: 'walking' });
+                mind.updateState({ thought: 'A path is being traced through the world.', location: 'The Threshold' });
+            }
+            if (moveX > 0) player.facing = 'right';
+            if (moveX < 0) player.facing = 'left';
+            if (moveY < 0) player.facing = 'up';
+            if (moveY > 0) player.facing = 'down';
+            world.cameraX = Math.max(0, Math.min(world.width - canvas.width, player.x - canvas.width / 2));
+            world.cameraY = Math.max(0, Math.min(world.height - canvas.height, player.y - canvas.height / 2));
+            updateHud();
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawWorld();
+            drawParticles();
+            drawPlayer();
+            ctx.fillStyle = 'rgba(255,255,255,0.16)';
+            ctx.fillRect(0, 0, canvas.width, 30);
+            ctx.fillStyle = '#fff';
+            ctx.font = '12px sans-serif';
+            ctx.fillText('Explore • Discover • Remember', 16, 20);
+            if (feedbackTimer > 0) {
+                feedbackTimer--;
+                if (feedbackTimer <= 0) {
+                    ui.feedback.classList.remove('show');
+                }
+            }
+        }
+
+        function gameLoop() {
+            handleMovement();
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function bindKey(keyCode, action) {
+            if (!keyCode) return;
+            keys[keyCode] = false;
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (rebinding) {
+                e.preventDefault();
+                if (e.code === 'Escape') {
+                    rebinding = null;
+                    showFeedback('Rebinding canceled');
+                    renderBindings();
+                    return;
+                }
+                const actionToBind = rebinding;
+                setBinding(actionToBind, e.code);
+                rebinding = null;
+                showFeedback(`${bindingLabel(actionToBind)} rebound`);
+                return;
+            }
+            if (e.code === controls.menu) {
+                ui.settings.classList.toggle('open');
+                renderBindings();
+                e.preventDefault();
+                return;
+            }
+            if (e.code === controls.interact) {
+                interactWithObject();
+                e.preventDefault();
+                return;
+            }
+            keys[e.code] = true;
+        });
+
+        window.addEventListener('keyup', (e) => {
+            keys[e.code] = false;
+        });
+
+        function renderBindings() {
+            ui.bindingList.innerHTML = '';
+            const entries = [
+                ['up', controls.up],
+                ['down', controls.down],
+                ['left', controls.left],
+                ['right', controls.right],
+                ['interact', controls.interact],
+                ['menu', controls.menu]
+            ];
+            entries.forEach(([action, value]) => {
+                const row = document.createElement('div');
+                row.innerHTML = `<strong>${bindingLabel(action)}:</strong> <button class="keybox">${value}</button>`;
+                const button = row.querySelector('button');
+                button.addEventListener('click', () => startRebinding(action));
+                ui.bindingList.appendChild(row);
+            });
+            if (rebinding) {
+                ui.bindingList.insertAdjacentHTML('beforeend', `<p>Waiting for new key for ${bindingLabel(rebinding)}...</p>`);
+            }
+        }
+
+        document.getElementById('close-settings').addEventListener('click', () => {
+            ui.settings.classList.remove('open');
+        });
+
+        buildWorld();
+        renderBindings();
+        updateHud();
+        addLog('The world awakens. Begin your first discovery.');
+        gameLoop();
+    </script>
+</body>
+</html>
+- Main HUD
+- Settings menu
+- Controls menu
+- Inventory display
+- Discovery log
+
+GAME FEEL:
+Add:
+- Sound effects placeholders
+- Particles when discovering objects
+- Screen feedback when important events happen
+- Smooth movement
+- Better colors and atmosphere
+
+Keep the Oroboro architecture intact.
+Do not remove the Mind/Brain engine.
+Expand the game layer around it.
+
+Before finishing:
+1. Run the game.
+2. Verify the player is visible.
+3. Verify keyboard controls work.
+4. Verify interactions create visible consequences.
+5. Explain all new files created.

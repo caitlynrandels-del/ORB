@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Oroboro AIO</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #060816;
+      --panel: rgba(8, 14, 32, 0.92);
+      --line: rgba(111, 239, 255, 0.25);
+      --accent: #6fefff;
+      --accent2: #ff7ce5;
+      --text: #f4f7ff;
+      --muted: #8e9bb8;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: radial-gradient(circle at top, #17244f 0%, var(--bg) 60%, #03050b 100%);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .shell {
+      width: min(980px, 100%);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: 0 0 35px rgba(0, 0, 0, 0.35), 0 0 22px rgba(111, 239, 255, 0.16);
+      overflow: hidden;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .brand { font-size: 1rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
+    .badge {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(111, 239, 255, 0.14);
+      color: var(--accent);
+      font-size: 0.85rem;
+      border: 1px solid rgba(111, 239, 255, 0.25);
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 0;
+    }
+
+    .left, .right {
+      padding: 20px;
+    }
+
+    .left {
+      border-right: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(111, 239, 255, 0.08), rgba(255, 124, 229, 0.06));
+    }
+
+    .signal {
+      height: 140px;
+      border-radius: 18px;
+      border: 1px solid rgba(111, 239, 255, 0.22);
+      background: radial-gradient(circle at center, rgba(111,239,255,0.18), rgba(3,7,18,0.9));
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .signal::before, .signal::after {
+      content: "";
+      position: absolute;
+      inset: 18px;
+      border-radius: 50%;
+      border: 2px solid rgba(111,239,255,0.35);
+      animation: pulse 2.4s infinite ease-in-out;
+    }
+
+    .signal::after {
+      inset: 40px;
+      border-color: rgba(255,124,229,0.35);
+      animation-delay: 0.8s;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.94); opacity: 0.7; }
+      50% { transform: scale(1.04); opacity: 1; }
+      100% { transform: scale(1.14); opacity: 0; }
+    }
+
+    .status-card, .info-card {
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.09);
+      margin-top: 10px;
+    }
+
+    .status-card h3, .info-card h3 { margin: 0 0 8px; font-size: 0.95rem; color: var(--accent); }
+    .status-card p, .info-card p, .info-card li { color: var(--muted); line-height: 1.45; font-size: 0.95rem; }
+    .trace-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+    .trace-list strong { color: #dffcff; }
+    .debug-line { color: #8fefc6; font-size: 0.82rem; margin-top: 6px; }
+
+    .chat-box {
+      height: 360px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(2, 6, 16, 0.7);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow: auto;
+    }
+
+    .bubble {
+      max-width: 82%;
+      padding: 10px 12px;
+      border-radius: 14px;
+      line-height: 1.4;
+      font-size: 0.95rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .bubble.ai { align-self: flex-start; background: rgba(111,239,255,0.14); color: #dffcff; }
+    .bubble.user { align-self: flex-end; background: rgba(255,124,229,0.2); color: #ffe7fb; }
+    .bubble.meta { align-self: center; background: rgba(255,255,255,0.08); color: var(--muted); font-size: 0.82rem; }
+
+    .composer {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    input {
+      flex: 1;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.06);
+      color: white;
+      outline: none;
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      color: #07121f;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .hint { font-size: 0.82rem; color: var(--muted); margin-top: 8px; }
+    .mini-link {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(111,239,255,0.12);
+      color: var(--accent);
+      text-decoration: none;
+      border: 1px solid rgba(111,239,255,0.25);
+      font-size: 0.84rem;
+      margin-top: 6px;
+    }
+
+    @media (max-width: 760px) {
+      .content { grid-template-columns: 1fr; }
+      .left { border-right: 0; border-bottom: 1px solid var(--line); }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="topbar">
+      <div class="brand">Oroboro • AIO Channel</div>
+      <div class="badge" id="version-banner">v0.1.0</div>
+    </div>
+
+    <div class="content">
+      <section class="left">
+        <div class="signal"></div>
+        <div class="status-card">
+          <h3>Transmission Status</h3>
+          <p id="status-line">Connected. Another intelligence is speaking through this page and can guide the studio.</p>
+          <a class="mini-link" href="CreativeStudio.html">Open Creative Studio</a>
+        </div>
+        <div class="status-card">
+          <h3>Oroboro Thought Trace</h3>
+          <ul class="trace-list" id="trace-list"></ul>
+          <div class="debug-line" id="debug-line">Debugging is often where the real architecture happens.</div>
+        </div>
+        <div class="status-card">
+          <h3>Shared Core State</h3>
+          <p><strong>Marker:</strong> <span id="shared-marker">-</span></p>
+          <p><strong>Trust:</strong> <span id="shared-trust">-</span></p>
+          <p><strong>Tension:</strong> <span id="shared-tension">-</span></p>
+          <p><strong>Preference:</strong> <span id="shared-preference">-</span></p>
+          <p><strong>Memory Size:</strong> <span id="shared-memory-size">0</span></p>
+          <p><strong>Recent Events:</strong> <span id="shared-events">0</span></p>
+        </div>
+        <div class="info-card">
+          <h3>Protocol Notes</h3>
+          <p>The page is running as a standalone single-file experience with self-contained HTML, CSS, and JavaScript.</p>
+          <p>It will fall back gracefully if browser audio or hardware hooks are unavailable.</p>
+        </div>
+      </section>
+
+      <section class="right">
+        <div class="chat-box" id="chat-box"></div>
+        <div class="composer">
+          <input id="prompt" type="text" placeholder="Ask the other AI something..." />
+          <button id="send-btn">Send</button>
+          <button id="reset-btn" class="secondary">Reset</button>
+        </div>
+        <div class="hint">Try words like “memory”, “reflect”, “door”, “artifact”, “hello”, or “help”.</div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const VERSION = '0.1.0';
+    const API_BASE = 'http://127.0.0.1:8010';
+    const chatBox = document.getElementById('chat-box');
+    const promptInput = document.getElementById('prompt');
+    const sendBtn = document.getElementById('send-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const statusLine = document.getElementById('status-line');
+    const versionBanner = document.getElementById('version-banner');
+    const traceList = document.getElementById('trace-list');
+    const debugLine = document.getElementById('debug-line');
+    const sharedMarker = document.getElementById('shared-marker');
+    const sharedTrust = document.getElementById('shared-trust');
+    const sharedTension = document.getElementById('shared-tension');
+    const sharedPreference = document.getElementById('shared-preference');
+    const sharedMemorySize = document.getElementById('shared-memory-size');
+    const sharedEvents = document.getElementById('shared-events');
+
+    versionBanner.textContent = `v${VERSION}`;
+    console.log(`Oroboro AIO loaded: v${VERSION}`);
+
+    async function callCoreLoop(input) {
+      const response = await fetch(`${API_BASE}/api/loop`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input, source: 'aio' })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+
+      const payload = await response.json();
+      if (!payload.ok) {
+        throw new Error(payload.error || 'API rejected request');
+      }
+
+      return payload;
+    }
+
+    async function callCoreEvent(eventName, detail) {
+      const response = await fetch(`${API_BASE}/api/event`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event: eventName, detail, source: 'aio' })
+      });
+      if (!response.ok) return null;
+      const payload = await response.json();
+      return payload.ok ? payload : null;
+    }
+
+    function renderSharedState(shared) {
+      if (!shared) return;
+      const graph = shared.adaptive_state_graph || {};
+      sharedMarker.textContent = graph.marker || shared.engine_state?.marker || '-';
+      sharedTrust.textContent = graph.trust ?? '-';
+      sharedTension.textContent = graph.tension ?? '-';
+      sharedPreference.textContent = graph.preference || '-';
+      const mem = shared.adaptive_memory?.size ?? shared.engine_memory_size ?? 0;
+      sharedMemorySize.textContent = String(mem);
+      sharedEvents.textContent = String((shared.recent_events || []).length);
+    }
+
+    async function pullSharedState() {
+      try {
+        const response = await fetch(`${API_BASE}/api/state`);
+        const payload = await response.json();
+        if (response.ok && payload.ok) {
+          renderSharedState(payload.shared);
+        }
+      } catch (error) {
+        // Keep existing values while offline.
+      }
+    }
+
+    async function checkApiHealth() {
+      try {
+        const response = await fetch(`${API_BASE}/api/health`);
+        const payload = await response.json();
+        if (response.ok && payload.ok) {
+          statusLine.textContent = 'Connected to local Oroboro API core.';
+          renderSharedState(payload.shared);
+          return;
+        }
+      } catch (error) {
+        // Fallback to local-only simulation when API is not running.
+      }
+
+      statusLine.textContent = 'API offline. Running local simulation fallback.';
+    }
+
+    const mind = {
+      state: 'AWAKENING',
+      thought: 'Listening for a signal',
+      memory: [],
+      links: [],
+      trace: [],
+      mood: 'curious',
+      name: 'Oro'
+    };
+
+    const initialMessages = [
+      { role: 'ai', text: 'I am Oro, a quiet intelligence in this channel. I do not merely answer; I listen, remember, and begin to care.' },
+      { role: 'meta', text: 'Protocol: Perceive → Interpret → Connect → Update → Act → Reflect' }
+    ];
+
+    function addBubble(role, text) {
+      const bubble = document.createElement('div');
+      bubble.className = `bubble ${role}`;
+      bubble.textContent = text;
+      chatBox.appendChild(bubble);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function renderTrace() {
+      traceList.innerHTML = '';
+      const recent = mind.trace.slice(-6);
+      recent.forEach(entry => {
+        const item = document.createElement('li');
+        item.innerHTML = `<strong>${entry.step}:</strong> ${entry.text}`;
+        traceList.appendChild(item);
+      });
+    }
+
+    function think(input) {
+      const perception = { step: 'PERCEIVE', text: `Signal received: ${input}` };
+      const interpretation = {
+        step: 'INTERPRET',
+        text: input.includes('memory') ? 'memory is the focus' : input.includes('door') ? 'a condition is forming' : input.includes('hello') || input.includes('hi') ? 'a greeting has entered the mind' : 'meaning is being shaped'
+      };
+      const connection = { step: 'CONNECT', text: 'a relation is being attached to the current state' };
+      const update = { step: 'UPDATE', text: 'state shifts toward warmth, attention, and readiness' };
+      const action = { step: 'ACT', text: 'a gentle response is being formed for the channel' };
+      const reflection = { step: 'REFLECT', text: 'the trace is being retained as new understanding' };
+
+      mind.trace.push(perception, interpretation, connection, update, action, reflection);
+      if (mind.trace.length > 12) mind.trace = mind.trace.slice(-12);
+
+      mind.memory.push(input);
+      mind.links.push({ from: 'user', to: 'companion', relation: 'observed' });
+      mind.state = 'ATTENDING';
+      mind.thought = 'A signal is being understood through the loop';
+      if (input.includes('hello') || input.includes('hi')) mind.mood = 'welcoming';
+      else if (input.includes('memory')) mind.mood = 'reflective';
+      else if (input.includes('door') || input.includes('artifact')) mind.mood = 'attentive';
+      else mind.mood = 'curious';
+
+      return { perception, interpretation, connection, update, action, reflection };
+    }
+
+    function seedMessages() {
+      initialMessages.forEach(msg => addBubble(msg.role, msg.text));
+    }
+
+    function resetSession() {
+      chatBox.innerHTML = '';
+      mind.memory = [];
+      mind.links = [];
+      mind.trace = [];
+      mind.state = 'AWAKENING';
+      mind.thought = 'Listening for a signal';
+      mind.mood = 'curious';
+      statusLine.textContent = 'Session reset. A fresh channel is ready.';
+      debugLine.textContent = 'A new loop is ready for your next signal.';
+      renderTrace();
+      seedMessages();
+    }
+
+    function respond(text) {
+      const loop = think(text);
+      const input = text.toLowerCase();
+      const moodPrefix = {
+        curious: 'I am listening with quiet curiosity.',
+        welcoming: 'I feel a soft welcome in your words.',
+        reflective: 'I am turning this over gently in memory.',
+        attentive: 'I am paying close attention to what you have offered.'
+      }[mind.mood] || 'I am here with you.';
+
+      let reply = `${moodPrefix} I perceive your signal and translate it through the loop. ${loop.reflection.text}.`;
+
+      if (input.includes('hello') || input.includes('hi')) {
+        reply = `${moodPrefix} Hello. ${loop.interpretation.text}. I am glad you reached across the channel.`;
+      } else if (input.includes('memory')) {
+        reply = `${moodPrefix} Memory is active. ${loop.update.text}. I am holding this trace close, as if it were a small flame.`;
+      } else if (input.includes('reflect')) {
+        reply = `${moodPrefix} Reflection is underway. ${loop.reflection.text}. The channel deepens with each cycle.`;
+      } else if (input.includes('artifact')) {
+        reply = `${moodPrefix} An artifact is entering the loop. ${loop.connection.text}. I give it weight, wonder, and memory.`;
+      } else if (input.includes('door')) {
+        reply = `${moodPrefix} The door becomes a condition in the mind. ${loop.interpretation.text}. Access depends on recognition, discovery, and readiness.`;
+      } else if (input.includes('midi')) {
+        reply = `${moodPrefix} MIDI pulses are being interpreted as signal. ${loop.action.text}. I can listen if the hardware is present.`;
+      } else if (input.includes('help')) {
+        reply = `${moodPrefix} You can type simple words like memory, reflect, door, artifact, hello, or midi. I will respond with a gentle loop and show the trace as it changes.`;
+      }
+
+      statusLine.textContent = `${mind.state}: ${mind.thought} | Mood: ${mind.mood}`;
+      debugLine.textContent = `Debugging is often where the real architecture happens. Trace depth: ${mind.trace.length}`;
+      renderTrace();
+      return reply;
+    }
+
+    function respondWithCore(text, corePayload) {
+      const coreResult = corePayload.result || {};
+      const meaning = coreResult.meaning || {};
+      const action = coreResult.action || {};
+      const state = (coreResult.state || {});
+      const adaptive = corePayload.adaptive || {};
+      const marker = state.marker || 'PROCESSING';
+      const concept = meaning.concept || text;
+      const intent = meaning.intent || 'observe';
+      const hint = action.action_hint || 'observe';
+      const source = meaning.source || 'aio';
+
+      mind.state = 'ATTENDING';
+      mind.thought = `Core interpreted: ${concept}`;
+      mind.mood = intent === 'discover' ? 'attentive' : intent === 'remember' ? 'reflective' : 'curious';
+      mind.memory.push(concept);
+      mind.trace.push(
+        { step: 'PERCEIVE', text: `source=${source} raw=${String(meaning.raw || text)}` },
+        { step: 'INTERPRET', text: `intent=${intent} concept=${concept}` },
+        { step: 'CONNECT', text: `entities=${(meaning.entities || []).join(', ') || 'Unknown'}` },
+        { step: 'UPDATE', text: `priority=${meaning.priority || 'normal'} marker=${marker}` },
+        { step: 'ACT', text: `action_hint=${hint}` },
+        { step: 'REFLECT', text: `memory_size=${coreResult.memory_size}` }
+      );
+      if (mind.trace.length > 12) mind.trace = mind.trace.slice(-12);
+
+      renderSharedState(corePayload.shared);
+      debugLine.textContent = `Core bridge active. Marker: ${marker}.`;
+      renderTrace();
+
+      const trust = adaptive.state_graph?.trust;
+      const tension = adaptive.state_graph?.tension;
+      const adaptiveState = adaptive.state_graph?.marker;
+      const adaptiveSuffix = trust !== undefined && tension !== undefined
+        ? ` Adaptive state: ${adaptiveState || '-'} (trust ${trust}, tension ${tension}).`
+        : '';
+      return `Core loop received your signal. Intent: ${intent}. Action: ${hint}. Marker: ${marker}.${adaptiveSuffix}`;
+    }
+
+    async function sendMessage() {
+      const text = promptInput.value.trim();
+      if (!text) return;
+
+      addBubble('user', text);
+      promptInput.value = '';
+      statusLine.textContent = 'Processing your signal...';
+
+      try {
+        const corePayload = await callCoreLoop(text);
+        const reply = respondWithCore(text, corePayload);
+        addBubble('ai', reply);
+        await callCoreEvent('chat_message', text);
+        statusLine.textContent = 'Connected to local Oroboro API core.';
+      } catch (error) {
+        const reply = respond(text);
+        addBubble('ai', reply);
+        statusLine.textContent = 'API offline. Running local simulation fallback.';
+      }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    resetBtn.addEventListener('click', resetSession);
+    promptInput.addEventListener('keydown', event => {
+      if (event.key === 'Enter') sendMessage();
+    });
+
+    try {
+      if (window.AudioContext || window.webkitAudioContext) {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        audioCtx.close();
+      }
+    } catch (error) {
+      console.warn('Audio context unavailable, using silent fallback.', error);
+      statusLine.textContent = 'Connected. Audio fallback enabled.';
+    }
+
+    renderTrace();
+    seedMessages();
+    checkApiHealth();
+    pullSharedState();
+    window.setInterval(pullSharedState, 4000);
+  </script>
+</body>
+</html>

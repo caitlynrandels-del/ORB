@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "ORB",
+			"path": "../../../../../.."
+		},
+		{
+			"name": "Oroboro",
+			"path": "../../../../../../../Oroboro"
+		}
+	],
+	"settings": {}
+}

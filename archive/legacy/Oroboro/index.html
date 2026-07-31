@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Oroboro Prototype</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="core">
+    <h1>OROBORO</h1>
+    <h2>Prototype Mind / Explorer</h2>
+
+    <div id="status">Initializing consciousness...</div>
+
+    <canvas id="midiVisualizer"></canvas>
+
+    <section id="exploration">
+      <h3>Unknown Territory</h3>
+      <canvas id="worldCanvas" width="640" height="480"></canvas>
+      <div class="controls">
+        <button onclick="movePlayer(-1, 0)">←</button>
+        <button onclick="movePlayer(0, -1)">↑</button>
+        <button onclick="movePlayer(0, 1)">↓</button>
+        <button onclick="movePlayer(1, 0)">→</button>
+        <button onclick="startDemo()">Demo</button>
+        <button onclick="explore()">Explore</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="js/oroboro_mind.js"></script>
+  <script src="js/language_model.js"></script>
+  <script src="js/midi.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
