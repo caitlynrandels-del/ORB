@@ -493,6 +493,7 @@
         <button class="surface-tab" data-surface="aio">AIO</button>
         <button class="surface-tab" data-surface="world">World</button>
         <button class="surface-tab" data-surface="studio">Studio</button>
+        <button class="surface-tab" data-surface="sprout">SproutLab</button>
       </nav>
 
       <div class="statusline">
@@ -913,13 +914,15 @@
       const srcMap = {
         aio: 'AIO.html',
         world: 'Index.html',
-        studio: 'CreativeStudio.html'
+        studio: 'CreativeStudio.html',
+        sprout: 'SproutLab.html'
       };
 
       const labelMap = {
         aio: 'Embedded AIO surface',
         world: 'Embedded World surface',
-        studio: 'Embedded Studio surface'
+        studio: 'Embedded Studio surface',
+        sprout: 'Embedded SproutLab surface'
       };
 
       ui.commandCenter.classList.remove('active');

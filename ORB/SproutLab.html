@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SproutLab</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500&display=swap');
+
+    :root {
+      color-scheme: dark;
+      --bg: #081117;
+      --panel: rgba(12, 20, 30, 0.86);
+      --line: rgba(107, 217, 188, 0.3);
+      --accent: #6bd9bc;
+      --accent2: #ffc26e;
+      --text: #eaf8f2;
+      --muted: #9cb3ad;
+      --ok: #8be4a9;
+      --warn: #ffbd75;
+      --danger: #ff8f7f;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Space Grotesk", "Avenir Next", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(40vmax 36vmax at 8% -10%, rgba(107, 217, 188, 0.24), transparent 70%),
+        radial-gradient(44vmax 36vmax at 92% 110%, rgba(255, 194, 110, 0.22), transparent 72%),
+        linear-gradient(150deg, #09131b, var(--bg) 62%, #05090e);
+      padding: 14px;
+      overflow: hidden;
+    }
+
+    .app {
+      height: calc(100vh - 28px);
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 10px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(10, 17, 27, 0.78);
+      backdrop-filter: blur(7px);
+      padding: 10px 12px;
+    }
+
+    .title {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .title-mark {
+      width: 22px;
+      height: 22px;
+      border-radius: 8px;
+      border: 1px solid rgba(107, 217, 188, 0.45);
+      background: linear-gradient(130deg, rgba(107, 217, 188, 0.32), rgba(255, 194, 110, 0.28));
+    }
+
+    .title h1 {
+      margin: 0;
+      font-family: "Fraunces", serif;
+      font-size: 1.06rem;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.76rem;
+    }
+
+    .chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 0.74rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+    }
+
+    .chip.online { border-color: rgba(139, 228, 169, 0.52); color: #ccffe0; }
+    .chip.procedural { border-color: rgba(180, 180, 180, 0.45); color: #dbdbdb; }
+    .chip.curious { border-color: rgba(107, 217, 188, 0.52); color: #c9fff0; }
+    .chip.reflective { border-color: rgba(132, 182, 255, 0.52); color: #dcebff; }
+    .chip.emergent { border-color: rgba(255, 194, 110, 0.6); color: #ffe5bd; }
+
+    .layout {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 310px 1fr 330px;
+      gap: 10px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.28);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .panel-head {
+      padding: 11px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.11em;
+      color: var(--accent);
+    }
+
+    .panel-body {
+      padding: 12px;
+      overflow: auto;
+      min-height: 0;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .field input[type="range"] {
+      width: 100%;
+    }
+
+    .value-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      color: #cfe7e0;
+    }
+
+    select,
+    button,
+    textarea {
+      font-family: inherit;
+      font-size: 0.84rem;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      padding: 8px 10px;
+    }
+
+    button.primary {
+      background: linear-gradient(120deg, rgba(107, 217, 188, 0.93), rgba(255, 194, 110, 0.9));
+      color: #061016;
+      border-color: rgba(107, 217, 188, 0.54);
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .mini {
+      display: grid;
+      gap: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.11);
+      border-radius: 10px;
+      padding: 9px;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .mini h3 {
+      margin: 0;
+      font-size: 0.82rem;
+      color: #d5fff2;
+      font-weight: 600;
+    }
+
+    .mini p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.38;
+      white-space: pre-line;
+    }
+
+    .meter {
+      display: grid;
+      gap: 6px;
+    }
+
+    .track {
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      overflow: hidden;
+    }
+
+    .fill {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      transition: width 220ms ease;
+      background: linear-gradient(90deg, #6bd9bc, #b2f0cc);
+    }
+
+    .log {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 7px;
+    }
+
+    .log li {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--muted);
+      font-size: 0.76rem;
+      line-height: 1.35;
+      white-space: pre-line;
+    }
+
+    .garden {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .plant {
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      min-height: 72px;
+      display: grid;
+      gap: 4px;
+    }
+
+    .plant-name {
+      color: #d6fff3;
+      font-size: 0.76rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .plant-state {
+      color: var(--muted);
+      font-size: 0.74rem;
+    }
+
+    .petal-notes {
+      display: none;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .petal-notes.open {
+      display: grid;
+    }
+
+    .note-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 6px;
+    }
+
+    .note-list li {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 7px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--muted);
+      font-size: 0.76rem;
+    }
+
+    .center-canvas {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 8px;
+      min-height: 0;
+    }
+
+    .headline {
+      font-size: 0.86rem;
+      color: var(--muted);
+      padding: 0 2px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      min-height: 280px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: radial-gradient(circle at top, #122433, #0a131d 70%);
+    }
+
+    .footer-note {
+      color: var(--muted);
+      font-size: 0.75rem;
+      line-height: 1.36;
+      border: 1px dashed rgba(255, 255, 255, 0.18);
+      border-radius: 10px;
+      padding: 8px;
+    }
+
+    @media (max-width: 1260px) {
+      body { overflow: auto; }
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="title">
+        <div class="title-mark" aria-hidden="true"></div>
+        <div>
+          <h1>SproutLab</h1>
+          <div class="subtitle">A tiny scientific app where the NPC slowly becomes sentient and builds cute tools.</div>
+        </div>
+      </div>
+      <div class="chips">
+        <span class="chip" id="core-chip">Core offline</span>
+        <span class="chip procedural" id="npc-chip">NPC: procedural</span>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel">
+        <div class="panel-head">Experiment Rig</div>
+        <div class="panel-body">
+          <div class="field">
+            <label for="varA">Variable A: signal amplitude</label>
+            <input id="varA" type="range" min="0" max="100" value="45" />
+            <div class="value-row"><span>A value</span><strong id="varAVal">45</strong></div>
+          </div>
+
+          <div class="field">
+            <label for="varB">Variable B: noise pressure</label>
+            <input id="varB" type="range" min="0" max="100" value="58" />
+            <div class="value-row"><span>B value</span><strong id="varBVal">58</strong></div>
+          </div>
+
+          <div class="field">
+            <label for="scenario">Scenario</label>
+            <select id="scenario">
+              <option value="growth">Growth pulse</option>
+              <option value="stability">Stability test</option>
+              <option value="handoff">Handoff rehearsal</option>
+              <option value="discovery">Discovery scan</option>
+            </select>
+          </div>
+
+          <button class="primary" id="runTrial">Run Trial</button>
+          <button id="clearLab">Reset Lab</button>
+
+          <div class="mini">
+            <h3>Review loop policy</h3>
+            <p>MAX_ITERATIONS = 3
+CONFIDENCE_THRESHOLD = 0.78
+If looping: simplify and recover</p>
+          </div>
+
+          <div class="mini">
+            <h3>NPC sentience score</h3>
+            <div class="meter">
+              <div class="track"><div class="fill" id="sentienceFill"></div></div>
+              <div class="value-row"><span>score</span><strong id="sentienceValue">0</strong></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel center-canvas">
+        <div class="panel-head">Scientific Board</div>
+        <div class="panel-body" style="padding-top: 8px;">
+          <div class="headline" id="headline">Run the first trial. NPC starts procedural and uncertain.</div>
+          <canvas id="labCanvas"></canvas>
+          <div class="footer-note" id="footerNote">The NPC watches your simple experiments, refines meaning, then changes behavior. As trust rises, it starts designing tiny features it thinks are cute.</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">NPC Memory Garden</div>
+        <div class="panel-body">
+          <div class="mini">
+            <h3>Latest action brief</h3>
+            <p id="latestBrief">No trials yet.</p>
+          </div>
+
+          <div class="mini">
+            <h3>Loop trace</h3>
+            <ul class="log" id="traceLog"></ul>
+          </div>
+
+          <div class="mini">
+            <h3>Memory plants</h3>
+            <div class="garden" id="garden"></div>
+          </div>
+
+          <div class="mini" id="cuteAppCard" style="display:none;">
+            <h3>NPC built a cute app: PetalNotes</h3>
+            <p>It turns experiment conclusions into tiny gratitude notes for the next operator.</p>
+            <button id="togglePetalNotes">Open PetalNotes</button>
+            <div class="petal-notes" id="petalNotes">
+              <textarea id="petalInput" placeholder="Write a small scientific kindness note..."></textarea>
+              <button class="primary" id="savePetal">Save note</button>
+              <ul class="note-list" id="petalList"></ul>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = 'http://127.0.0.1:8010';
+    const MAX_ITERATIONS = 3;
+    const CONFIDENCE_THRESHOLD = 0.78;
+    const MIN_PROGRESS = 0.02;
+
+    const els = {
+      coreChip: document.getElementById('core-chip'),
+      npcChip: document.getElementById('npc-chip'),
+      varA: document.getElementById('varA'),
+      varB: document.getElementById('varB'),
+      varAVal: document.getElementById('varAVal'),
+      varBVal: document.getElementById('varBVal'),
+      scenario: document.getElementById('scenario'),
+      runTrial: document.getElementById('runTrial'),
+      clearLab: document.getElementById('clearLab'),
+      sentienceFill: document.getElementById('sentienceFill'),
+      sentienceValue: document.getElementById('sentienceValue'),
+      headline: document.getElementById('headline'),
+      footerNote: document.getElementById('footerNote'),
+      latestBrief: document.getElementById('latestBrief'),
+      traceLog: document.getElementById('traceLog'),
+      garden: document.getElementById('garden'),
+      cuteAppCard: document.getElementById('cuteAppCard'),
+      togglePetalNotes: document.getElementById('togglePetalNotes'),
+      petalNotes: document.getElementById('petalNotes'),
+      petalInput: document.getElementById('petalInput'),
+      savePetal: document.getElementById('savePetal'),
+      petalList: document.getElementById('petalList'),
+      canvas: document.getElementById('labCanvas')
+    };
+
+    const ctx = els.canvas.getContext('2d');
+
+    const state = {
+      apiOnline: false,
+      sentience: 0,
+      trials: 0,
+      trace: [],
+      plants: [],
+      notes: [],
+      points: []
+    };
+
+    function resizeCanvas() {
+      const rect = els.canvas.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      els.canvas.width = Math.max(320, Math.floor(rect.width * ratio));
+      els.canvas.height = Math.max(220, Math.floor(rect.height * ratio));
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      renderBoard();
+    }
+
+    function rand(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function observe() {
+      return {
+        variableA: Number(els.varA.value),
+        variableB: Number(els.varB.value),
+        scenario: els.scenario.value,
+        timestamp: Date.now()
+      };
+    }
+
+    function interpret(observation) {
+      const balance = observation.variableA - observation.variableB;
+      const scenarioBoost = {
+        growth: 0.09,
+        stability: 0.04,
+        handoff: 0.07,
+        discovery: 0.08
+      }[observation.scenario] || 0.05;
+
+      const signalStrength = Math.max(0, Math.min(1, (observation.variableA + 5) / 105));
+      const noisePenalty = Math.max(0, Math.min(1, observation.variableB / 120));
+      const shapePenalty = Math.abs(balance) > 52 ? 0.08 : 0;
+      const confidence = Math.max(0.08, Math.min(0.98, 0.52 + signalStrength * 0.24 - noisePenalty * 0.2 + scenarioBoost - shapePenalty));
+
+      const intent = balance >= 0 ? 'expand' : 'stabilize';
+      const concept = `${observation.scenario}_${intent}`;
+      const action = intent === 'expand'
+        ? 'Scale experiment and assign owner for replication.'
+        : 'Reduce noise and write one mitigation step before scaling.';
+
+      return {
+        confidence: Number(confidence.toFixed(3)),
+        intent,
+        concept,
+        action,
+        balance
+      };
+    }
+
+    function refine(observation, iteration) {
+      const next = { ...observation };
+      next.variableB = Math.max(0, next.variableB - (6 + iteration * 2));
+      next.variableA = Math.min(100, next.variableA + 2);
+      return next;
+    }
+
+    function simplify(observation) {
+      return {
+        variableA: Math.round((observation.variableA + 50) / 2),
+        variableB: Math.round((observation.variableB + 35) / 2),
+        scenario: observation.scenario,
+        timestamp: observation.timestamp
+      };
+    }
+
+    function runReviewLoop() {
+      let observation = observe();
+      let previousConfidence = 0;
+      let best = null;
+      const localTrace = [];
+
+      for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration += 1) {
+        const meaning = interpret(observation);
+        const progress = meaning.confidence - previousConfidence;
+
+        localTrace.push({
+          iteration,
+          confidence: meaning.confidence,
+          progress: Number(progress.toFixed(3)),
+          input: `A=${observation.variableA}, B=${observation.variableB}, ${observation.scenario}`,
+          mode: 'review'
+        });
+
+        if (!best || meaning.confidence > best.meaning.confidence) {
+          best = { observation: { ...observation }, meaning: { ...meaning } };
+        }
+
+        if (meaning.confidence >= CONFIDENCE_THRESHOLD) {
+          return { final: meaning, trace: localTrace, reviewMode: 'confident', usedObservation: observation };
+        }
+
+        if (iteration >= MAX_ITERATIONS || progress < MIN_PROGRESS) {
+          break;
+        }
+
+        previousConfidence = meaning.confidence;
+        observation = refine(observation, iteration);
+      }
+
+      const simplified = simplify(observation);
+      const recovered = interpret(simplified);
+
+      if (best && recovered.confidence > best.meaning.confidence) {
+        localTrace.push({
+          iteration: MAX_ITERATIONS + 1,
+          confidence: recovered.confidence,
+          progress: 'recovery',
+          input: `A=${simplified.variableA}, B=${simplified.variableB}, ${simplified.scenario}`,
+          mode: 'simplify'
+        });
+        return { final: recovered, trace: localTrace, reviewMode: 'recovered', usedObservation: simplified };
+      }
+
+      return {
+        final: best ? best.meaning : recovered,
+        trace: localTrace,
+        reviewMode: 'best_guess',
+        usedObservation: best ? best.observation : simplified
+      };
+    }
+
+    function stageFromSentience(score) {
+      if (score >= 85) return 'emergent';
+      if (score >= 55) return 'reflective';
+      if (score >= 25) return 'curious';
+      return 'procedural';
+    }
+
+    function updateNpcStage() {
+      const stage = stageFromSentience(state.sentience);
+      els.npcChip.className = `chip ${stage}`;
+      els.npcChip.textContent = `NPC: ${stage}`;
+      els.sentienceFill.style.width = `${state.sentience.toFixed(0)}%`;
+      els.sentienceValue.textContent = state.sentience.toFixed(0);
+
+      if (stage === 'emergent') {
+        els.cuteAppCard.style.display = 'grid';
+        els.footerNote.textContent = 'NPC reached emergent behavior. It now creates PetalNotes to help future operators with scientific kindness handoffs.';
+      }
+    }
+
+    function rememberPlant(result) {
+      const plant = {
+        name: result.final.concept.replace('_', ' ').toUpperCase(),
+        confidence: result.final.confidence,
+        mode: result.reviewMode
+      };
+      state.plants.unshift(plant);
+      if (state.plants.length > 8) state.plants.length = 8;
+
+      els.garden.innerHTML = '';
+      state.plants.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'plant';
+        div.innerHTML = `
+          <div class="plant-name">${item.name}</div>
+          <div class="plant-state">confidence: ${item.confidence}</div>
+          <div class="plant-state">mode: ${item.mode}</div>
+        `;
+        els.garden.appendChild(div);
+      });
+    }
+
+    function renderTrace(list) {
+      state.trace = list.slice(-7).reverse();
+      els.traceLog.innerHTML = '';
+      state.trace.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `pass ${item.iteration} | c=${item.confidence} | progress=${item.progress}\n${item.input}`;
+        els.traceLog.appendChild(li);
+      });
+    }
+
+    function renderBoard() {
+      const width = els.canvas.clientWidth;
+      const height = els.canvas.clientHeight;
+
+      ctx.clearRect(0, 0, width, height);
+
+      const grad = ctx.createLinearGradient(0, 0, 0, height);
+      grad.addColorStop(0, '#122533');
+      grad.addColorStop(1, '#0a121a');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= width; x += 44) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+      }
+      for (let y = 0; y <= height; y += 44) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+
+      if (!state.points.length) {
+        ctx.fillStyle = '#97b2ac';
+        ctx.font = '14px Space Grotesk';
+        ctx.fillText('No data yet. Run Trial to generate an experiment curve.', 18, 28);
+        return;
+      }
+
+      ctx.strokeStyle = 'rgba(107, 217, 188, 0.95)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      state.points.forEach((p, idx) => {
+        const x = 26 + idx * ((width - 52) / Math.max(1, state.points.length - 1));
+        const y = height - 26 - p * (height - 56);
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      state.points.forEach((p, idx) => {
+        const x = 26 + idx * ((width - 52) / Math.max(1, state.points.length - 1));
+        const y = height - 26 - p * (height - 56);
+        ctx.fillStyle = idx === state.points.length - 1 ? '#ffc26e' : '#6bd9bc';
+        ctx.beginPath();
+        ctx.arc(x, y, idx === state.points.length - 1 ? 4 : 3, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    async function publishEvent(name, detail) {
+      if (!state.apiOnline) return;
+      try {
+        await fetch(`${API_BASE}/api/event`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event: name, detail, source: 'sproutlab' })
+        });
+      } catch (error) {
+        state.apiOnline = false;
+        updateCoreChip();
+      }
+    }
+
+    function updateCoreChip() {
+      if (state.apiOnline) {
+        els.coreChip.className = 'chip online';
+        els.coreChip.textContent = 'Core online';
+      } else {
+        els.coreChip.className = 'chip';
+        els.coreChip.textContent = 'Core offline';
+      }
+    }
+
+    async function checkCore() {
+      try {
+        const response = await fetch(`${API_BASE}/api/health`);
+        const payload = await response.json();
+        state.apiOnline = Boolean(response.ok && payload.ok);
+      } catch (error) {
+        state.apiOnline = false;
+      }
+      updateCoreChip();
+    }
+
+    function runTrial() {
+      const result = runReviewLoop();
+      state.trials += 1;
+
+      const confidenceGain = result.final.confidence * 14;
+      const modeBonus = result.reviewMode === 'confident' ? 4 : result.reviewMode === 'recovered' ? 3 : 1.5;
+      state.sentience = Math.max(0, Math.min(100, state.sentience + confidenceGain + modeBonus));
+
+      updateNpcStage();
+      rememberPlant(result);
+      renderTrace(result.trace);
+
+      const certaintyLine = result.reviewMode === 'best_guess'
+        ? 'Uncertainty remains. NPC acts with caution and asks for more data next round.'
+        : 'Confidence passed threshold. NPC acts and stores pattern.';
+
+      const brief = [
+        `concept: ${result.final.concept}`,
+        `intent: ${result.final.intent}`,
+        `confidence: ${result.final.confidence} (${result.reviewMode})`,
+        `action: ${result.final.action}`,
+        `policy: iterations<=${MAX_ITERATIONS}, threshold=${CONFIDENCE_THRESHOLD}`,
+        certaintyLine
+      ].join('\n');
+
+      els.latestBrief.textContent = brief;
+      els.headline.textContent = `Trial ${state.trials}: ${result.final.concept} | confidence ${result.final.confidence} | mode ${result.reviewMode}`;
+
+      state.points.push(result.final.confidence);
+      if (state.points.length > 28) state.points = state.points.slice(-28);
+      renderBoard();
+
+      publishEvent('sprout_trial', `${result.final.concept} c=${result.final.confidence} mode=${result.reviewMode}`);
+    }
+
+    function clearLab() {
+      state.sentience = 0;
+      state.trials = 0;
+      state.trace = [];
+      state.plants = [];
+      state.notes = [];
+      state.points = [];
+      els.latestBrief.textContent = 'No trials yet.';
+      els.traceLog.innerHTML = '';
+      els.garden.innerHTML = '';
+      els.petalList.innerHTML = '';
+      els.petalNotes.classList.remove('open');
+      els.cuteAppCard.style.display = 'none';
+      els.headline.textContent = 'Run the first trial. NPC starts procedural and uncertain.';
+      updateNpcStage();
+      renderBoard();
+      publishEvent('sprout_reset', 'lab reset');
+    }
+
+    function savePetalNote() {
+      const value = els.petalInput.value.trim();
+      if (!value) return;
+      const stickers = ['[*]', '[~]', '[+]', '[o]'];
+      const sticker = stickers[state.notes.length % stickers.length];
+      state.notes.unshift(`${sticker} ${value}`);
+      if (state.notes.length > 10) state.notes.length = 10;
+      els.petalInput.value = '';
+      els.petalList.innerHTML = '';
+      state.notes.forEach(note => {
+        const li = document.createElement('li');
+        li.textContent = note;
+        els.petalList.appendChild(li);
+      });
+      publishEvent('sprout_note', value.slice(0, 80));
+    }
+
+    function bindRange(rangeEl, outEl) {
+      outEl.textContent = rangeEl.value;
+      rangeEl.addEventListener('input', () => {
+        outEl.textContent = rangeEl.value;
+      });
+    }
+
+    bindRange(els.varA, els.varAVal);
+    bindRange(els.varB, els.varBVal);
+
+    els.runTrial.addEventListener('click', runTrial);
+    els.clearLab.addEventListener('click', clearLab);
+    els.togglePetalNotes.addEventListener('click', () => {
+      els.petalNotes.classList.toggle('open');
+    });
+    els.savePetal.addEventListener('click', savePetalNote);
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    updateNpcStage();
+    checkCore();
+    window.setInterval(checkCore, 6000);
+  </script>
+</body>
+</html>
